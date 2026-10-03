@@ -1,6 +1,7 @@
 {
   "sogrom-simple-damage-log": {
     "title": "Simple Damage Log",
+    "unknownCreature": "Unknown creature",
     "flavor": {
       "damage": "Took {amount} damage",
       "healing": "Healed {amount}",
@@ -78,6 +79,10 @@
       "gmOnlyHiddenTokens": {
         "name": "Hidden tokens are GM-only",
         "hint": "Damage and healing on a token hidden from players is shown to GMs only. Use Reveal on the message to show it later."
+      },
+      "hideUnknownNames": {
+        "name": "Keep secret names secret",
+        "hint": "When players see limited damage info for a creature whose token name they can't see (shown only to owners, or never), the entry shows \"Unknown creature\" and no portrait."
       },
       "clampToMax": {
         "name": "Clamp to max HP",

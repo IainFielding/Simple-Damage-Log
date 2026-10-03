@@ -27,6 +27,25 @@ const calculated = new WeakMap();
 /** actor uuid → {damage, expected, at} */
 const pending = new Map();
 
+/**
+ * Drop entries older than the TTL. An entry is normally taken by its actor's next update, but one
+ * whose update never comes (a hit die rolled at full HP, damage another module cancelled after this
+ * one saw it) would otherwise stay for the session, and unlinked tokens each have their own uuid.
+ * Called on every write, so neither map outgrows the handful of changes in flight.
+ * @param {Map<string, {at: number}|number>} map
+ */
+function prune(map) {
+  const cutoff = Date.now() - PENDING_TTL_MS;
+  for ( const [key, value] of map ) {
+    if ( (typeof value === "number" ? value : value.at) < cutoff ) map.delete(key);
+  }
+}
+
+/** How many contexts are held, for the leak tests. */
+export function heldCounts() {
+  return { pending: pending.size, hitDice: hitDice.size };
+}
+
 /** Hooked at init: a calculation, possibly only a preview. */
 export function onCalculateDamage(_actor, damages, options) {
   if ( options && (typeof options === "object") ) calculated.set(options, summariseDamage(damages));
@@ -42,6 +61,7 @@ export function onPreApplyDamage(actor, _amount, updates, options) {
   const calc = calculated.get(options);
   const summary = hasTypedParts(calc) ? calc : null;
   const source = sourceOf(options?.originatingMessage);
+  prune(pending);
   pending.set(actor.uuid, {
     damage: (summary || source) ? { ...(summary ?? { parts: [], threshold: false }), ...(source ? { source } : {}) } : null,
     expected: updates ?? {},
@@ -78,7 +98,9 @@ const hitDice = new Map();
  * own update, that write carries no `isRest` option, so this is how it is recognised as rest healing.
  */
 export function onRollHitDie(_rolls, { subject } = {}) {
-  if ( subject?.uuid ) hitDice.set(subject.uuid, Date.now());
+  if ( !subject?.uuid ) return;
+  prune(hitDice);
+  hitDice.set(subject.uuid, Date.now());
 }
 
 /**

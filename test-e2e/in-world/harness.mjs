@@ -114,6 +114,7 @@ export async function all() {
   results.push(await suite("apiSuite", apiSuite));
   results.push(await suite("settingsSuite", settingsSuite));
   results.push(await suite("rerenderSuite", rerenderSuite));
+  results.push(await suite("leakSuite", leakSuite));
   return Object.fromEntries(results);
 }
 
@@ -528,6 +529,44 @@ async function rerenderSuite(report) {
   report.check("one not in the log isn't pushed into it", !rowOf(unloaded));
 }
 
+/**
+ * Nothing the module holds grows with use: hook listeners, the damage and hit die contexts that
+ * bridge dnd5e's hooks to the actor update, and the undo guard all return to where they started
+ * after many rounds of damage, undo, redo and hit dice that heal nothing.
+ */
+async function leakSuite(report) {
+  const capture = await import(`/modules/${MODULE}/scripts/capture.mjs`);
+  const actions = await import(`/modules/${MODULE}/scripts/actions.mjs`);
+  const listeners = () => Object.fromEntries(
+    ["updateChatMessage", "updateActor", "preUpdateActor", "renderChatMessageHTML", "dnd5e.renderChatMessage"]
+      .map(name => [name, Hooks.events[name]?.length ?? 0]));
+  const sleepPast = () => sleep(2100); // the contexts' TTL
+
+  const hero = game.actors.getName(HERO);
+  const goblin = tokenActor(SEEN);
+  await sleepPast();
+  await goblin.applyDamage([{ value: 1, type: "bludgeoning" }]); // settle anything left by earlier suites (not fire: it resists)
+  await nthEntry(1);
+  const before = { listeners: listeners(), held: capture.heldCounts(), inFlight: actions.inFlightCount() };
+
+  for ( let i = 0; i < 20; i++ ) {
+    await goblin.applyDamage([{ value: 1, type: "slashing" }]);
+    const entry = await nthEntry(2 + i, `entry ${i}`);
+    await api().revert(entry);
+    await api().reapply(entry);
+    // A hit die at full HP writes nothing, so its context is never consumed.
+    Hooks.callAll("dnd5e.rollHitDieV2", [], { subject: hero, updates: {} });
+  }
+  await sleepPast();
+  await goblin.applyDamage([{ value: 1, type: "bludgeoning" }]); // a write prunes what expired
+  await nthEntry(22);
+
+  report.equal("no hook listeners are left behind", listeners(), before.listeners);
+  report.check("no damage or hit die contexts pile up", capture.heldCounts().pending <= 1 && capture.heldCounts().hitDice <= 1,
+    JSON.stringify(capture.heldCounts()));
+  report.equal("no undo is left marked as under way", actions.inFlightCount(), 0);
+}
+
 /** The settings form greys out settings whose parent is off, and follows the GM's ticks live. */
 async function settingsSuite(report) {
   const app = new foundry.applications.settings.SettingsConfig();
@@ -573,6 +612,8 @@ export async function preparePlayer() {
   await nthEntry(2);
   await tokenActor(LURKER).update({ "system.attributes.hp.value": 12 });
   await nthEntry(3);
+  await tokenActor(SEEN).update({ "system.attributes.hp.value": 18 });
+  await nthEntry(4);
   return entries().map(m => m.id);
 }
 

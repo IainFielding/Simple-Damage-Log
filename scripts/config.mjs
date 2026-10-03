@@ -31,6 +31,7 @@ export const SETTINGS = Object.freeze({
   showLimitedInfo: "showLimitedInfo",
   hideHealingInLimitedInfo: "hideHealingInLimitedInfo",
   gmOnlyHiddenTokens: "gmOnlyHiddenTokens",
+  hideUnknownNames: "hideUnknownNames",
   clampToMax: "clampToMax",
   clampToMin: "clampToMin",
   suppressNotify: "suppressNotify",
@@ -38,6 +39,9 @@ export const SETTINGS = Object.freeze({
   showDamageTypes: "showDamageTypes",
   debug: "debugLogging"
 });
+
+/** Foundry's token name display modes that show the name to everyone, duplicated for Node. */
+export const PUBLIC_NAME_MODES = Object.freeze([30, 50]); // HOVER, ALWAYS
 
 /** Foundry's ownership levels, duplicated so `data/` does not need `CONST` under Node. */
 export const OWNERSHIP = Object.freeze({ NONE: 0, LIMITED: 1, OBSERVER: 2, OWNER: 3 });
@@ -49,6 +53,7 @@ export const DEFAULTS = Object.freeze({
   [SETTINGS.showLimitedInfo]: false,
   [SETTINGS.hideHealingInLimitedInfo]: false,
   [SETTINGS.gmOnlyHiddenTokens]: true,
+  [SETTINGS.hideUnknownNames]: true,
   [SETTINGS.clampToMax]: true,
   [SETTINGS.clampToMin]: true,
   [SETTINGS.suppressNotify]: true,

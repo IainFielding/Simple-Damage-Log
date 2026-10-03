@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULTS, OWNERSHIP, SETTINGS } from "../scripts/config.mjs";
-import { canRevert, canViewTable, isHiddenFrom, isTrustedAuthor, whisperFor } from "../scripts/data/visibility.mjs";
+import {
+  canRevert, canViewTable, hideNameFrom, isHiddenFrom, isTrustedAuthor, nameIsSecret, whisperFor
+} from "../scripts/data/visibility.mjs";
 
 const gm = { id: "gm", isGM: true };
 const owner = { id: "owner", isGM: false };
@@ -122,5 +124,37 @@ describe("forged entries", () => {
 
   it("won't let even a GM undo a forged entry", () => {
     expect(canRevert({ user: gm, author: observer, settings: settings(), hasPermission })).toBe(false);
+  });
+});
+
+describe("secret names", () => {
+  it("keeps a monster's name secret when its token shows it only to owners or never", () => {
+    expect(nameIsSecret({ hasPlayerOwner: false, displayName: 0 })).toBe(true);   // NONE
+    expect(nameIsSecret({ hasPlayerOwner: false, displayName: 40 })).toBe(true);  // OWNER
+    expect(nameIsSecret({ hasPlayerOwner: false, displayName: 30 })).toBe(false); // HOVER
+    expect(nameIsSecret({ hasPlayerOwner: false, displayName: 50 })).toBe(false); // ALWAYS
+  });
+
+  it("never hides a player character's name", () => {
+    expect(nameIsSecret({ hasPlayerOwner: true, displayName: 0 })).toBe(false);
+  });
+
+  const hide = (user, overrides = {}) => hideNameFrom({
+    user, entry: { anonymous: true }, canTable: false, settings: settings(), hasPermission, ...overrides
+  });
+
+  it("hides it from a player with no permission on the actor", () => {
+    expect(hide(stranger)).toBe(true);
+  });
+
+  it("but not from GMs, anyone with Limited or better, or anyone who sees the table", () => {
+    expect(hide(gm)).toBe(false);
+    expect(hide(observer)).toBe(false);
+    expect(hide(stranger, { canTable: true })).toBe(false);
+  });
+
+  it("nor when the setting is off, or the name wasn't secret", () => {
+    expect(hide(stranger, { settings: settings({ [SETTINGS.hideUnknownNames]: false }) })).toBe(false);
+    expect(hide(stranger, { entry: {} })).toBe(false);
   });
 });

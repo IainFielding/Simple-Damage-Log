@@ -12,7 +12,7 @@
  * A hidden token's entries go to GMs only, whatever the tiers say.
  */
 
-import { OWNERSHIP, SETTINGS } from "../config.mjs";
+import { OWNERSHIP, PUBLIC_NAME_MODES, SETTINGS } from "../config.mjs";
 
 /**
  * @callback PermissionTest
@@ -73,6 +73,26 @@ export function isHiddenFrom({ canTable, entry, settings }) {
   if ( canTable ) return false;
   if ( entry.public === true ) return false;
   return !limitedInfoApplies(entry.kind, settings) || (!!entry.hidden && !!settings[SETTINGS.gmOnlyHiddenTokens]);
+}
+
+/**
+ * Whether an actor's name is kept from players: no player owns it, and its token shows its name
+ * only to owners, or never. Decided when the entry is posted.
+ * @param {{hasPlayerOwner: boolean, displayName: number|undefined}} args
+ * @returns {boolean}
+ */
+export function nameIsSecret({ hasPlayerOwner, displayName }) {
+  return !hasPlayerOwner && !PUBLIC_NAME_MODES.includes(displayName);
+}
+
+/**
+ * Whether to show a viewer "Unknown creature" in place of an entry's speaker: the setting is on,
+ * the name was secret when posted, and the viewer neither sees the table nor has any permission on
+ * the actor (someone with Limited or better already knows it).
+ */
+export function hideNameFrom({ user, entry, canTable, settings, hasPermission }) {
+  if ( !settings[SETTINGS.hideUnknownNames] || !entry.anonymous || canTable || user.isGM ) return false;
+  return !hasPermission(user, OWNERSHIP.LIMITED);
 }
 
 /**

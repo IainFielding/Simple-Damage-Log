@@ -14,7 +14,7 @@ import {
 import { consume, consumeHitDie } from "./capture.mjs";
 import { classify, diffChanges } from "./data/changes.mjs";
 import { buildEntry, flavorText } from "./data/entry.mjs";
-import { whisperFor } from "./data/visibility.mjs";
+import { nameIsSecret, whisperFor } from "./data/visibility.mjs";
 
 /**
  * The update option that carries drafted entries from preUpdateActor to updateActor, keyed by actor
@@ -81,6 +81,10 @@ function postEntry(actor, hpChanges, damage) {
     tokenUuid: actor.isToken ? actor.token?.uuid : null,
     changes: hpChanges,
     hidden,
+    anonymous: nameIsSecret({
+      hasPlayerOwner: !!actor.hasPlayerOwner,
+      displayName: (token ?? actor.prototypeToken)?.displayName
+    }),
     damage
   });
 

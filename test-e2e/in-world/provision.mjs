@@ -70,8 +70,14 @@ async function ensureScene(goblin) {
   const wanted = [{ name: SEEN, hidden: false, x: 100 }, { name: LURKER, hidden: true, x: 300 }];
   for ( const spec of wanted ) {
     const token = scene.tokens.getName(spec.name);
-    if ( token ) continue;
-    const data = (await goblin.getTokenDocument({ name: spec.name, hidden: spec.hidden, x: spec.x, y: 100 })).toObject();
+    // Names shown only to owners, so the goblins' names are secret from the player.
+    if ( token ) {
+      if ( token.displayName !== CONST.TOKEN_DISPLAY_MODES.OWNER ) await token.update({ displayName: CONST.TOKEN_DISPLAY_MODES.OWNER });
+      continue;
+    }
+    const data = (await goblin.getTokenDocument({
+      name: spec.name, hidden: spec.hidden, x: spec.x, y: 100, displayName: CONST.TOKEN_DISPLAY_MODES.OWNER
+    })).toObject();
     await scene.createEmbeddedDocuments("Token", [data]);
   }
   return scene;
@@ -111,6 +117,7 @@ export const DEFAULT_SETTINGS = {
   showLimitedInfo: false,
   hideHealingInLimitedInfo: false,
   gmOnlyHiddenTokens: true,
+  hideUnknownNames: true,
   clampToMax: true,
   clampToMin: true,
   suppressNotify: true,

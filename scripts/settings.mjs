@@ -13,6 +13,7 @@ const WORLD = [
   [SETTINGS.showLimitedInfo, Boolean],
   [SETTINGS.hideHealingInLimitedInfo, Boolean],
   [SETTINGS.gmOnlyHiddenTokens, Boolean],
+  [SETTINGS.hideUnknownNames, Boolean],
   [SETTINGS.clampToMax, Boolean],
   [SETTINGS.clampToMin, Boolean],
   [SETTINGS.suppressNotify, Boolean],
@@ -23,7 +24,8 @@ const WORLD = [
 /** Settings that change what a viewer sees on entries already in the log. */
 const RERENDER = new Set([
   SETTINGS.allowPlayerView, SETTINGS.minPlayerPermission, SETTINGS.showLimitedInfo,
-  SETTINGS.hideHealingInLimitedInfo, SETTINGS.gmOnlyHiddenTokens, SETTINGS.showDamageTypes
+  SETTINGS.hideHealingInLimitedInfo, SETTINGS.gmOnlyHiddenTokens, SETTINGS.hideUnknownNames,
+  SETTINGS.showDamageTypes
 ]);
 
 /**

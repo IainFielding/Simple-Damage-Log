@@ -73,6 +73,9 @@ export async function toggleRevert(message) {
 /** Messages with an undo or redo under way on this client. */
 const inFlight = new Set();
 
+/** How many undos are under way, for the leak tests. */
+export const inFlightCount = () => inFlight.size;
+
 /** How long to wait for the flag writer to mark an entry after its actor was updated. */
 const MARK_TIMEOUT_MS = 5000;
 

@@ -21,7 +21,10 @@ real dnd5e actors. The rules (diffs, damage or healing, who sees what, undo math
   settings and follows ticks live.
 - A forged entry renders as a plain message and can't be undone; a forged undo marker on another
   actor's update changes nothing. Changing a visibility setting re-renders only the entries on
-  screen. An update
+  screen.
+- Nothing the module holds grows with use: after 20 rounds of damage, undo and redo, and hit dice
+  that heal nothing, hook listeners, held contexts and the undo guard are back where they started.
+- As the player, a creature whose token name is secret shows as "Unknown creature" with no portrait. An update
   another module adjusts after this one logs the HP it really reached.
 - As the player: the owned character's entry shows its table, an observed one shows the flavour
   only, the hidden goblin's isn't visible, Undo works on the player's own character and is refused
@@ -57,7 +60,7 @@ that image; it's there for someone to look at.
 
 | World | Modules | Status |
 | --- | --- | --- |
-| `damage-log-e2e` | the module only | 101 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
+| `damage-log-e2e` | the module only | 108 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
 
 ## Layout
 
@@ -65,5 +68,5 @@ that image; it's there for someone to look at.
 | --- | --- | --- |
 | `run.mjs`, `provision.mjs`, `lib/` | Node | Starts Foundry, joins with Playwright, prints reports |
 | `in-world/provision.mjs` | the page | Fixtures: the player, `[e2e] Hero`, `[e2e] Bystander`, `[e2e] Goblin`, and a scene with a seen and a hidden goblin token |
-| `in-world/harness.mjs` | GM page | Log, damage type, undo, menu, visibility, rest, quiet, forgery, API, settings and re-render suites; the player set-up; the showcase |
+| `in-world/harness.mjs` | GM page | Log, damage type, undo, menu, visibility, rest, quiet, forgery, API, settings, re-render and leak suites; the player set-up; the showcase |
 | `in-world/player.mjs` | player page | What a player receives, sees and may undo |

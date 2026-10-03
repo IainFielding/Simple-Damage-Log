@@ -13,7 +13,7 @@ import { api, registerApi } from "./api.mjs";
 import { onCalculateDamage, onPreApplyDamage, onRollHitDie } from "./capture.mjs";
 import { onGetChatMessageContextOptions } from "./context-menu.mjs";
 import { onPreUpdateActor, onUpdateActor as postDraftedEntry } from "./logger.mjs";
-import { onRenderChatMessage, preloadTemplates } from "./render.mjs";
+import { onDnd5eRenderChatMessage, onRenderChatMessage, preloadTemplates } from "./render.mjs";
 import { onRenderSettingsConfig, registerSettings } from "./settings.mjs";
 import { onPreUpdateChatMessage, onUpdateActor as markReverted, onUpdateChatMessage } from "./sync.mjs";
 
@@ -38,6 +38,7 @@ Hooks.once("init", () => {
   Hooks.on("preUpdateChatMessage", onPreUpdateChatMessage);
   Hooks.on("updateChatMessage", onUpdateChatMessage);
   Hooks.on("renderChatMessageHTML", onRenderChatMessage);
+  Hooks.on("dnd5e.renderChatMessage", onDnd5eRenderChatMessage);
   Hooks.on("getChatMessageContextOptions", onGetChatMessageContextOptions);
 });
 

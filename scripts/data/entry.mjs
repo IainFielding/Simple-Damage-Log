@@ -7,6 +7,7 @@
  *     kind, total,                 "damage" | "healing", and the amount for the flavour line
  *     changes: HpChange[],         non-zero rows only, ids not labels (labels localise on render)
  *     hidden?: true,               the token was hidden when the HP changed
+ *     anonymous?: true,            its name was kept from players when the HP changed
  *     damage?: {parts, threshold, source?}   when the change came through dnd5e's applyDamage
  *     reverted?: boolean,          undone
  *     public?: boolean             set by a GM's Reveal / Conceal; deleted by Reset Visibility
@@ -25,11 +26,12 @@ import { classify } from "./changes.mjs";
  * @param {{parts: object[], threshold: boolean, source?: object}|null} [args.damage]
  * @returns {object}
  */
-export function buildEntry({ actorUuid, tokenUuid = null, changes, hidden = false, damage = null }) {
+export function buildEntry({ actorUuid, tokenUuid = null, changes, hidden = false, anonymous = false, damage = null }) {
   const { kind, total } = classify(changes);
   const entry = { schema: FLAG_SCHEMA, actorUuid, kind, total, changes };
   if ( tokenUuid ) entry.tokenUuid = tokenUuid;
   if ( hidden ) entry.hidden = true;
+  if ( anonymous ) entry.anonymous = true;
   if ( damage ) entry.damage = damage;
   return entry;
 }

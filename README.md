@@ -39,6 +39,8 @@ No libWrapper or other library is needed.
     HP. Healing can be left out of this.
   - Damage to a **hidden token** is shown to GMs only, so players don't learn about a monster they
     can't see.
+  - A creature whose **name is hidden** on its token appears in limited info as "Unknown
+    creature", with no portrait.
   - **Reveal** and **Conceal** in an entry's menu work as on any message. **Reset Visibility** puts
     the entry back to what the settings say.
 - **Players can undo too, if you let them.** **Allow players to undo/redo damage** lets players undo
@@ -59,6 +61,7 @@ switched on are greyed out until it is.
 | Show limited damage info to players | Off |
 | Hide healing in the limited damage info | Off |
 | Hidden tokens are GM-only | On |
+| Keep secret names secret | On |
 | Clamp to max HP | On |
 | Clamp to min HP | On |
 | Quiet entries | On |

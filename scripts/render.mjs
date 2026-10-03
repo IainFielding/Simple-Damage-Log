@@ -10,7 +10,7 @@ import { CSS, MODULE_ID, SETTINGS, settingsSnapshot, t, tpl } from "./config.mjs
 import { actorOf, trustedEntry } from "./actions.mjs";
 import { shownParts } from "./data/entry.mjs";
 import { DISPLAY_ORDER } from "./data/tracked.mjs";
-import { canViewTable, isHiddenFrom } from "./data/visibility.mjs";
+import { canViewTable, hideNameFrom, isHiddenFrom } from "./data/visibility.mjs";
 import { damageTypeLabel } from "./logger.mjs";
 
 const TABLE = tpl("entry-table.hbs");
@@ -51,6 +51,35 @@ export async function onRenderChatMessage(message, html) {
     allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true
   });
   content.querySelector("[data-sdl-source]")?.addEventListener("click", onSourceClick);
+}
+
+/**
+ * Hooked on `dnd5e.renderChatMessage`, which fires after dnd5e has built the message header
+ * (`renderChatMessageHTML` fires before it). Shows "Unknown creature" and a blank portrait to a
+ * viewer who shouldn't learn the speaker's name. The name is still in the message data.
+ */
+export function onDnd5eRenderChatMessage(message, html) {
+  const entry = trustedEntry(message);
+  if ( !entry?.anonymous || !(html instanceof HTMLElement) ) return;
+  const settings = settingsSnapshot();
+  const actor = actorOf(entry);
+  const hasPermission = (user, level) => !!actor?.testUserPermission(user, level);
+  const canTable = canViewTable({ user: game.user, entry, settings, hasPermission });
+  if ( !hideNameFrom({ user: game.user, entry, canTable, settings, hasPermission }) ) return;
+
+  const unknown = t("unknownCreature");
+  const sender = html.querySelector(".message-sender");
+  const title = sender?.querySelector(".title");
+  if ( title ) title.textContent = unknown;
+  else if ( sender ) sender.textContent = unknown;
+  const img = sender?.querySelector(".avatar img, .avatar video");
+  if ( img ) img.replaceWith(Object.assign(document.createElement("img"), { src: CONST.DEFAULT_TOKEN, alt: unknown }));
+  const avatar = sender?.querySelector(".avatar");
+  if ( avatar ) {
+    avatar.classList.remove("token");
+    delete avatar.dataset.actorUuid;
+    delete avatar.dataset.tokenUuid;
+  }
 }
 
 /** The data the table template reads. */

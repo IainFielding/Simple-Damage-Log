@@ -4,7 +4,7 @@
  * hidden goblin.
  */
 
-import { BYSTANDER, HERO, LURKER, MAX_HP, MODULE } from "./provision.mjs";
+import { BYSTANDER, HERO, LURKER, MAX_HP, MODULE, SEEN } from "./provision.mjs";
 import { Report, api, entries, nthEntry, renderedRow, rowOf, waitFor } from "./harness.mjs";
 
 const entryFor = name => entries().find(m => m.speaker?.alias === name);
@@ -16,7 +16,7 @@ export async function all() {
     const hero = game.actors.getName(HERO);
 
     report.check("the player owns the hero", hero?.isOwner === true);
-    await waitFor(() => entries().length >= 2, "the two entries this player receives");
+    await waitFor(() => entries().length >= 3, "the entries this player receives");
 
     const own = entryFor(HERO);
     report.check("the player receives their own character's entry", !!own);
@@ -29,6 +29,19 @@ export async function all() {
     report.check("…without its table", !seenRow.querySelector(".sdl-table"));
     report.check("…but not hidden: the flavour line shows", !seenRow.classList.contains("sdl-hidden")
       && /damage/i.test(seenRow.textContent), seenRow.textContent.trim());
+
+    // The seen goblin's token shows its name only to owners: limited info must not reveal it.
+    const goblin = entryFor(SEEN);
+    const goblinRow = await renderedRow(goblin, { table: false });
+    const shownName = () => goblinRow.querySelector(".message-sender .title")?.textContent.trim()
+      ?? goblinRow.querySelector(".message-sender")?.textContent.trim();
+    await waitFor(() => shownName() === "Unknown creature", "the goblin's name to be hidden").catch(() => {});
+    report.equal("a creature whose name is secret appears as Unknown creature", shownName(), "Unknown creature");
+    report.check("…with no portrait of it", goblinRow.querySelector(".message-sender .avatar img")?.getAttribute("src")?.includes("mystery-man"),
+      goblinRow.querySelector(".message-sender .avatar img")?.getAttribute("src"));
+    report.check("…and nowhere in the rendered entry", !goblinRow.textContent.includes(SEEN));
+    const seenName = seenRow.querySelector(".message-sender .title")?.textContent.trim();
+    report.equal("a character the player observes keeps its name", seenName, BYSTANDER);
 
     // v14 hands every client every message; a whisper is filtered by `visible` and never rendered.
     const lurker = entryFor(LURKER);

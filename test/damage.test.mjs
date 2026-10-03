@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { consume, onCalculateDamage, onPreApplyDamage } from "../scripts/capture.mjs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  consume, consumeHitDie, heldCounts, onCalculateDamage, onPreApplyDamage, onRollHitDie
+} from "../scripts/capture.mjs";
 import { hasTypedParts, summariseDamage } from "../scripts/data/damage-parts.mjs";
 import { buildEntry, flavorText, readEntry } from "../scripts/data/entry.mjs";
 import { MODULE_ID } from "../scripts/config.mjs";
@@ -105,5 +107,27 @@ describe("capture", () => {
   it("ignores a calculation that was only a preview", () => {
     onCalculateDamage(actor, [{ type: "fire", value: 3, active: {} }], options);
     expect(consume(actor, { value: 27 })).toBe(null);
+  });
+});
+
+describe("capture holds nothing for long", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("drops a damage context whose update never came, and a hit die that healed nothing", () => {
+    vi.useFakeTimers();
+    for ( let i = 0; i < 50; i++ ) {
+      onPreApplyDamage({ uuid: `Scene.s.Token.t${i}.Actor.a` }, 5, { "system.attributes.hp.value": 1 }, {});
+      onRollHitDie([], { subject: { uuid: `Actor.h${i}` } });
+    }
+    expect(heldCounts()).toEqual({ pending: 50, hitDice: 50 });
+
+    vi.advanceTimersByTime(5000);
+    onPreApplyDamage({ uuid: "Actor.next" }, 5, {}, {});
+    onRollHitDie([], { subject: { uuid: "Actor.next" } });
+    expect(heldCounts()).toEqual({ pending: 1, hitDice: 1 });
+
+    consume({ uuid: "Actor.next" }, {});
+    consumeHitDie({ uuid: "Actor.next" });
+    expect(heldCounts()).toEqual({ pending: 0, hitDice: 0 });
   });
 });
