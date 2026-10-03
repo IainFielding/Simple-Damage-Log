@@ -72,7 +72,7 @@ switched on are greyed out until it is.
 
 | | |
 | --- | --- |
-| `isEntry(message)` | Whether a chat message is a damage log entry |
+| `isEntry(message)` | Whether a chat message is a genuine damage log entry. One whose author couldn't have made the change (a forgery) isn't |
 | `entryFor(message)` | A copy of its entry data, or `null` |
 | `revert(messageOrId)` | Undo an entry. `false` if already undone or not allowed |
 | `reapply(messageOrId)` | Redo an undone entry |

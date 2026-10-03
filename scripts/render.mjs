@@ -7,8 +7,8 @@
  */
 
 import { CSS, MODULE_ID, SETTINGS, settingsSnapshot, t, tpl } from "./config.mjs";
-import { actorOf } from "./actions.mjs";
-import { readEntry, shownParts } from "./data/entry.mjs";
+import { actorOf, trustedEntry } from "./actions.mjs";
+import { shownParts } from "./data/entry.mjs";
 import { DISPLAY_ORDER } from "./data/tracked.mjs";
 import { canViewTable, isHiddenFrom } from "./data/visibility.mjs";
 import { damageTypeLabel } from "./logger.mjs";
@@ -27,7 +27,7 @@ export function preloadTemplates() {
 
 /** Hooked on `renderChatMessageHTML`. */
 export async function onRenderChatMessage(message, html) {
-  const entry = readEntry(message);
+  const entry = trustedEntry(message);
   if ( !entry || !(html instanceof HTMLElement) ) return;
   const settings = settingsSnapshot();
 
@@ -103,9 +103,18 @@ function cssEscape(value) {
   return globalThis.CSS?.escape ? globalThis.CSS.escape(value) : String(value).replace(/"/g, "");
 }
 
-/** Re-render every entry already in the log, after a setting that changes what viewers see. */
+/**
+ * Re-render the entries on screen, after a setting that changes what viewers see.
+ *
+ * Only those already rendered: `ChatLog#updateMessage` *posts* a visible message it can't find,
+ * taking it for one that has just become visible, so calling it on every entry in the world would
+ * push every older entry not yet loaded into the log at once.
+ */
 export function rerenderEntries() {
-  for ( const message of game.messages ) {
-    if ( message.flags?.[MODULE_ID] ) ui.chat?.updateMessage(message);
+  const ids = new Set([...document.querySelectorAll(`.chat-log .message.${CSS.entry}[data-message-id]`)]
+    .map(li => li.dataset.messageId));
+  for ( const id of ids ) {
+    const message = game.messages.get(id);
+    if ( message ) ui.chat?.updateMessage(message);
   }
 }

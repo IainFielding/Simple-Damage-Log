@@ -5,7 +5,7 @@
 import { MODULE_ID, SETTINGS, settingsSnapshot, t } from "./config.mjs";
 import { readEntry } from "./data/entry.mjs";
 import { revertUpdate } from "./data/revert.mjs";
-import { canRevert, whisperFor } from "./data/visibility.mjs";
+import { canRevert, isTrustedAuthor, whisperFor } from "./data/visibility.mjs";
 
 /** Resolve an entry's actor; null if it has been deleted. */
 export function actorOf(entry) {
@@ -14,6 +14,19 @@ export function actorOf(entry) {
   } catch {
     return null;
   }
+}
+
+/**
+ * A message's entry, if it is genuine: posted by someone who could have made the change (see
+ * isTrustedAuthor). A forged one is treated as an ordinary chat message everywhere.
+ * @param {ChatMessage|null} message
+ * @returns {object|null}
+ */
+export function trustedEntry(message) {
+  const entry = readEntry(message);
+  if ( !entry ) return null;
+  const actor = actorOf(entry);
+  return isTrustedAuthor(message.author ?? null, (user, level) => !!actor?.testUserPermission(user, level)) ? entry : null;
 }
 
 /** Whether the current user may undo or redo this message's entry. */

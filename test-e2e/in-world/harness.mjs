@@ -113,6 +113,7 @@ export async function all() {
   results.push(await suite("forgerySuite", forgerySuite));
   results.push(await suite("apiSuite", apiSuite));
   results.push(await suite("settingsSuite", settingsSuite));
+  results.push(await suite("rerenderSuite", rerenderSuite));
   return Object.fromEntries(results);
 }
 
@@ -462,10 +463,14 @@ async function forgerySuite(report) {
   report.check("a forged entry from a player who can't change the actor can't be undone, even by the GM",
     (await api().revert(forged)) === false);
   report.equal("…and the actor is untouched", hp(bystander).value, MAX_HP);
+  report.check("the API doesn't count it as an entry", !api().isEntry(forged));
+  const forgedRow = await waitFor(() => rowOf(forged), "the forged message to render");
+  report.check("…and it renders as a plain message, not an entry", !forgedRow.classList.contains("sdl-entry")
+    && !forgedRow.querySelector(".sdl-table"));
 
   // A real entry, then an unrelated actor update carrying an undo marker that names it.
   await bystander.update({ "system.attributes.hp.value": 22 });
-  const real = await nthEntry(2, "a real entry");
+  const real = await nthEntry(1, "a real entry");
   await hero.update({ "system.attributes.hp.value": 29 }, { [MODULE]: { messageId: real.id, reverted: true } });
   await sleep(400);
   report.check("an undo marker on another actor's update doesn't mark the entry",
@@ -501,6 +506,26 @@ async function apiSuite(report) {
   } finally {
     Hooks.off("simpleDamageLog.preCreateEntry", id);
   }
+}
+
+/**
+ * A setting that changes what viewers see re-renders the entries on screen, and only those: core's
+ * updateMessage would post one that isn't in the log, as if it had just become visible.
+ */
+async function rerenderSuite(report) {
+  const hero = game.actors.getName(HERO);
+  await hero.update({ "system.attributes.hp.value": 25 });
+  const shown = await nthEntry(1);
+  await hero.update({ "system.attributes.hp.value": 20 });
+  const unloaded = await nthEntry(2);
+  await renderedRow(shown);
+  (await renderedRow(unloaded)).remove(); // as if it were older than the loaded batch
+
+  await set("showDamageTypes", false);
+  await waitFor(() => rowOf(shown) && !rowOf(shown).querySelector(".sdl-parts"), "the shown entry to re-render").catch(() => {});
+  await sleep(400);
+  report.check("an entry on screen is re-rendered", !!rowOf(shown));
+  report.check("one not in the log isn't pushed into it", !rowOf(unloaded));
 }
 
 /** The settings form greys out settings whose parent is off, and follows the GM's ticks live. */
