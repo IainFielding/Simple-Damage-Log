@@ -1,0 +1,30 @@
+<table class="sdl-table">
+  <thead>
+    <tr>
+      <th></th>
+      <th class="num">{{headers.old}}</th>
+      <th class="num">{{headers.diff}}</th>
+      <th class="num">{{headers.new}}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each rows}}
+    <tr>
+      <td>{{this.label}}</td>
+      <td class="num">{{this.old}}</td>
+      <td class="num sdl-diff sdl-{{this.cls}}">{{this.diff}}</td>
+      <td class="num">{{this.new}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{#if parts.length}}
+<ul class="sdl-parts">
+  {{#each parts}}
+  <li><span class="sdl-part-value">{{this.value}}</span> {{this.label}}{{#if this.mods}} <span class="sdl-mods">({{this.mods}})</span>{{/if}}</li>
+  {{/each}}
+</ul>
+{{/if}}
+{{#if source}}
+<p class="sdl-source"><a data-sdl-source="{{source.messageId}}"><i class="fa-solid fa-arrow-turn-up" inert></i> {{sourceText}}</a></p>
+{{/if}}

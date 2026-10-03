@@ -1,0 +1,57 @@
+{
+  "id": "sogrom-simple-damage-log",
+  "title": "Simple Damage Log",
+  "description": "Every change to a D&D 5e actor's hit points, posted to the chat log: old, change and new, with the damage types and the attack it came from. Right-click to undo or redo it. Choose what players see. No libWrapper needed.",
+  "version": "#{VERSION}#",
+  "compatibility": {
+    "minimum": "14.359",
+    "maximum": "14.999",
+    "verified": "14.368"
+  },
+  "authors": [
+    {
+      "name": "Iain Fielding",
+      "url": "https://iainfielding.com",
+      "discord": "Sogrom"
+    }
+  ],
+  "relationships": {
+    "conflicts": [
+      {
+        "id": "damage-log",
+        "type": "module",
+        "manifest": "https://codeberg.org/cs96and/FoundryVTT-damage-log/releases/download/latest/module.json",
+        "reason": "Both log HP changes, so every change would be logged twice."
+      }
+    ],
+    "optional": [],
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.0",
+          "maximum": "6.99.99",
+          "verified": "6.0.5"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/damage-log.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "license": "LICENSE"
+}

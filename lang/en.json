@@ -1,0 +1,108 @@
+{
+  "sogrom-simple-damage-log": {
+    "title": "Simple Damage Log",
+    "flavor": {
+      "damage": "Took {amount} damage",
+      "healing": "Healed {amount}",
+      "withTypes": "{text} ({types})",
+      "tempmax": {
+        "damage": "Lost {amount} maximum HP",
+        "healing": "Gained {amount} maximum HP"
+      }
+    },
+    "field": {
+      "hp": "HP",
+      "temp": "Temp HP",
+      "tempmax": "Max HP"
+    },
+    "table": {
+      "old": "Old",
+      "diff": "Change",
+      "new": "New",
+      "source": "from {alias}",
+      "sourceItem": "from {alias}'s {item}"
+    },
+    "mod": {
+      "immunity": "immune",
+      "resistance": "resisted",
+      "vulnerability": "vulnerable",
+      "modification": "modified",
+      "threshold": "below threshold"
+    },
+    "menu": {
+      "resetVisibility": "Reset Visibility",
+      "undoDamage": "Undo Damage",
+      "undoHealing": "Undo Healing",
+      "redoDamage": "Redo Damage",
+      "redoHealing": "Redo Healing"
+    },
+    "word": {
+      "damage": "damage",
+      "healing": "healing",
+      "undo": "undo",
+      "redo": "redo"
+    },
+    "notify": {
+      "sourceNotLoaded": "That chat card isn't loaded in the log. Scroll up to load older messages."
+    },
+    "error": {
+      "notAllowed": "Damage Log | You aren't allowed to {verb} this {what}.",
+      "actorMissing": "Damage Log | That actor no longer exists.",
+      "noWriter": "Damage Log | Can't {verb} {what}: neither {user} nor a GM is connected."
+    },
+    "settings": {
+      "allowPlayerView": {
+        "name": "Allow players to view the damage log",
+        "hint": "Players see entries for actors they have the minimum permission below on."
+      },
+      "minPlayerPermission": {
+        "name": "Minimum actor permission",
+        "hint": "Players see an actor's HP table only if they have this permission (or better) on it.",
+        "none": "None",
+        "limited": "Limited",
+        "observer": "Observer",
+        "owner": "Owner"
+      },
+      "allowPlayerUndo": {
+        "name": "Allow players to undo/redo damage",
+        "hint": "Players can undo and redo damage and healing on actors they own."
+      },
+      "showLimitedInfo": {
+        "name": "Show limited damage info to players",
+        "hint": "Every player sees how much damage or healing every actor took, but not the Old/Change/New table."
+      },
+      "hideHealingInLimitedInfo": {
+        "name": "Hide healing in the limited damage info",
+        "hint": "Healing isn't shown in the limited info; only players who can see the table see it."
+      },
+      "gmOnlyHiddenTokens": {
+        "name": "Hidden tokens are GM-only",
+        "hint": "Damage and healing on a token hidden from players is shown to GMs only. Use Reveal on the message to show it later."
+      },
+      "clampToMax": {
+        "name": "Clamp to max HP",
+        "hint": "When undoing damage or redoing healing, don't take HP above the actor's current maximum."
+      },
+      "clampToMin": {
+        "name": "Clamp to min HP",
+        "hint": "When redoing damage or undoing healing, don't take HP or temp HP below 0."
+      },
+      "suppressNotify": {
+        "name": "Quiet entries",
+        "hint": "Entries don't flash the chat tab, pop up a notification or play a sound."
+      },
+      "ignoreRests": {
+        "name": "Don't log rests",
+        "hint": "HP recovered on a short or long rest isn't logged."
+      },
+      "showDamageTypes": {
+        "name": "Show damage types",
+        "hint": "List the damage types, resistances and the attack an HP change came from, when dnd5e applied it."
+      },
+      "debugLogging": {
+        "name": "Debug logging",
+        "hint": "Write what the damage log does to the browser console. For troubleshooting."
+      }
+    }
+  }
+}

@@ -1,0 +1,94 @@
+/*
+ * Simple Damage Log — entries in the chat log.
+ *
+ * An entry keeps the look of an ordinary chat message in either interface theme; a coloured edge
+ * and a faint tint say damage or healing. Colours are custom properties so a theme can retune them.
+ */
+
+.chat-message.sdl-entry {
+  --sdl-accent: var(--sdl-damage);
+  --sdl-damage: #c0392b;
+  --sdl-healing: #2e8b57;
+  --sdl-tempmax: #7b5ea7;
+  border-left: 4px solid var(--sdl-accent);
+  background-image: linear-gradient(color-mix(in srgb, var(--sdl-accent) 10%, transparent),
+    color-mix(in srgb, var(--sdl-accent) 10%, transparent));
+}
+
+.theme-dark .chat-message.sdl-entry,
+.chat-message.sdl-entry.themed.theme-dark {
+  --sdl-damage: #e5675a;
+  --sdl-healing: #5cc98b;
+  --sdl-tempmax: #a98bd6;
+}
+
+.chat-message.sdl-entry.sdl-healing { --sdl-accent: var(--sdl-healing); }
+
+/* Undone: dimmed and struck through, but the header stays readable. */
+.chat-message.sdl-entry.sdl-reverted { opacity: 0.6; }
+.chat-message.sdl-entry.sdl-reverted .flavor-text,
+.chat-message.sdl-entry.sdl-reverted .sdl-table td,
+.chat-message.sdl-entry.sdl-reverted .sdl-parts { text-decoration: line-through; }
+
+/* An entry this viewer may not see at all (see data/visibility.mjs#isHiddenFrom). */
+.chat-message.sdl-entry.sdl-hidden { display: none !important; }
+
+/* The portrait and whisper badges add nothing to a one-line entry. */
+.chat-message.sdl-entry .message-header .message-portrait,
+.chat-message.sdl-entry [class^="chat-portrait-indicator-"],
+.chat-message.sdl-entry [class^="chat-portrait-whisper-to-"] { display: none; }
+
+/* --- The table ------------------------------------------------------------------ */
+
+.sdl-entry .sdl-table {
+  width: 100%;
+  margin: 2px 0;
+  border: none;
+  border-collapse: collapse;
+  background: none;
+  font-size: var(--font-size-12, 12px);
+}
+.sdl-entry .sdl-table th,
+.sdl-entry .sdl-table td {
+  padding: 1px 4px;
+  border: none;
+}
+.sdl-entry .sdl-table thead th {
+  font-weight: 600;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.sdl-entry .sdl-table tbody tr:nth-child(even) { background: color-mix(in srgb, currentColor 5%, transparent); }
+.sdl-entry .sdl-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.sdl-entry .sdl-diff.sdl-down { color: var(--sdl-damage); font-weight: 600; }
+.sdl-entry .sdl-diff.sdl-up { color: var(--sdl-healing); font-weight: 600; }
+
+.sdl-entry .sdl-parts {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: var(--font-size-12, 12px);
+}
+.sdl-entry .sdl-part-value { font-weight: 600; }
+.sdl-entry .sdl-mods { opacity: 0.8; font-style: italic; }
+
+.sdl-entry .sdl-source {
+  margin: 4px 0 0;
+  font-size: var(--font-size-11, 11px);
+}
+.sdl-entry .sdl-source a { cursor: pointer; }
+
+/* The card a "from …" link jumped to. */
+.chat-message.sdl-flash { animation: sdl-flash 1.5s ease-out; }
+@keyframes sdl-flash {
+  from { box-shadow: 0 0 0 3px var(--color-warm-2, #ff6400); }
+  to { box-shadow: 0 0 0 3px transparent; }
+}
+
+/* Settings that don't apply until their parent setting is ticked. */
+.form-group.sdl-disabled { opacity: 0.5; }

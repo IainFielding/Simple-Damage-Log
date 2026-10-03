@@ -1,0 +1,15 @@
+{
+  "name": "sogrom-damage-log-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Local end-to-end harness: drives a real Foundry install to exercise the Damage Log on real dnd5e actors, as a GM and a player. Not shipped.",
+  "scripts": {
+    "link-module": "node scripts/link-module.mjs",
+    "provision": "node provision.mjs",
+    "test": "node run.mjs",
+    "hold": "node run.mjs --hold"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
