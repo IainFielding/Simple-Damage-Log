@@ -13,7 +13,14 @@ const users = [gm, owner, observer, stranger];
 const LEVELS = { gm: OWNERSHIP.OWNER, owner: OWNERSHIP.OWNER, observer: OWNERSHIP.OBSERVER, stranger: OWNERSHIP.NONE };
 const hasPermission = (user, level) => LEVELS[user.id] >= level;
 
-const settings = (overrides = {}) => ({ ...DEFAULTS, ...overrides });
+/** Players locked out and secret names kept, whatever the shipped defaults; each case turns on what it needs. */
+const BASE = {
+  ...DEFAULTS,
+  [SETTINGS.allowPlayerView]: false,
+  [SETTINGS.showLimitedInfo]: false,
+  [SETTINGS.hideUnknownNames]: true
+};
+const settings = (overrides = {}) => ({ ...BASE, ...overrides });
 const whisper = (s, kind = "damage", hiddenToken = false) =>
   whisperFor({ kind, hiddenToken, users, settings: s, hasPermission });
 

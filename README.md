@@ -32,15 +32,14 @@ No libWrapper or other library is needed.
   again to **Redo**. Clamping keeps HP between 0 and the actor's maximum (both can be switched off).
 - **Stays in the chat log.** No extra tab. Entries don't flash the chat tab or play a sound.
 - **You choose what players see.**
-  - By default only GMs see the log.
-  - **Allow players to view** shows players entries for actors they have at least the chosen
-    permission on (Owner by default).
-  - **Limited damage info** shows every player how much damage every creature took, but not its
-    HP. Healing can be left out of this.
+  - **Allow players to view** (on by default) shows players entries for actors they have at least
+    the chosen permission on (Owner by default). Switch it off and only GMs see the log.
+  - **Limited damage info** (on by default) shows every player how much damage every creature
+    took, but not its HP. Healing can be left out of this.
   - Damage to a **hidden token** is shown to GMs only, so players don't learn about a monster they
     can't see.
-  - A creature whose **name is hidden** on its token appears in limited info as "Unknown
-    creature", with no portrait.
+  - With **Keep secret names secret** on, a creature whose **name is hidden** on its token appears
+    in limited info as "Unknown creature", with no portrait.
   - **Reveal** and **Conceal** in an entry's menu work as on any message. **Reset Visibility** puts
     the entry back to what the settings say.
 - **Players can undo too, if you let them.** **Allow players to undo/redo damage** lets players undo
@@ -55,13 +54,13 @@ switched on are greyed out until it is.
 
 | Setting | Default |
 | --- | --- |
-| Allow players to view the damage log | Off |
+| Allow players to view the damage log | On |
 | Minimum actor permission | Owner |
 | Allow players to undo/redo damage | Off |
-| Show limited damage info to players | Off |
+| Show limited damage info to players | On |
 | Hide healing in the limited damage info | Off |
 | Hidden tokens are GM-only | On |
-| Keep secret names secret | On |
+| Keep secret names secret | Off |
 | Clamp to max HP | On |
 | Clamp to min HP | On |
 | Quiet entries | On |

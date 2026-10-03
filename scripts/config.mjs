@@ -47,13 +47,13 @@ export const PUBLIC_NAME_MODES = Object.freeze([30, 50]); // HOVER, ALWAYS
 export const OWNERSHIP = Object.freeze({ NONE: 0, LIMITED: 1, OBSERVER: 2, OWNER: 3 });
 
 export const DEFAULTS = Object.freeze({
-  [SETTINGS.allowPlayerView]: false,
+  [SETTINGS.allowPlayerView]: true,
   [SETTINGS.minPlayerPermission]: OWNERSHIP.OWNER,
   [SETTINGS.allowPlayerUndo]: false,
-  [SETTINGS.showLimitedInfo]: false,
+  [SETTINGS.showLimitedInfo]: true,
   [SETTINGS.hideHealingInLimitedInfo]: false,
   [SETTINGS.gmOnlyHiddenTokens]: true,
-  [SETTINGS.hideUnknownNames]: true,
+  [SETTINGS.hideUnknownNames]: false,
   [SETTINGS.clampToMax]: true,
   [SETTINGS.clampToMin]: true,
   [SETTINGS.suppressNotify]: true,
