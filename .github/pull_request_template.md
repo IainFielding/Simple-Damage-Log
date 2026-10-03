@@ -26,12 +26,12 @@ and unit tests don't cover the Foundry UI, so please also say what you ran and c
 -->
 
 - [ ] `npm run check` passes locally
-- [ ] End-to-end harness passes (`cd test-e2e && npm test`) — required for equip, slot, sheet-tab or dock changes
+- [ ] End-to-end harness passes (`cd test-e2e && npm test`) — required for logging, rendering, undo or visibility changes
 - [ ] Verified in Foundry VTT
 
 **Manual testing steps:**
 
-<!-- e.g. Dragged a longsword onto Main Hand, then a greatsword; the off hand cleared and the longsword unequipped. -->
+<!-- e.g. Applied 8 fire damage to a fire-resistant goblin from a damage card; the entry said 4 fire (resisted), and Undo restored the HP. -->
 
 **Tested against:**
 

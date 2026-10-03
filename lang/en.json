@@ -93,7 +93,7 @@
       },
       "ignoreRests": {
         "name": "Don't log rests",
-        "hint": "HP recovered on a short or long rest isn't logged."
+        "hint": "HP recovered on a short or long rest, including hit dice spent, isn't logged."
       },
       "showDamageTypes": {
         "name": "Show damage types",

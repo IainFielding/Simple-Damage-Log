@@ -111,6 +111,7 @@ export async function all() {
   results.push(await suite("restSuite", restSuite));
   results.push(await suite("quietSuite", quietSuite));
   results.push(await suite("apiSuite", apiSuite));
+  results.push(await suite("settingsSuite", settingsSuite));
   return Object.fromEntries(results);
 }
 
@@ -149,6 +150,20 @@ async function logSuite(report) {
   const aid = await nthEntry(3, "an entry for temp max HP");
   report.equal("a max HP change gets its own row and wording",
     [api().entryFor(aid).changes[0].id, api().entryFor(aid).kind], ["tempmax", "healing"]);
+
+  // One batched update for two actors: Foundry shares its options between them, and each must
+  // still get its own entry with its own numbers.
+  const bystander = game.actors.getName(BYSTANDER);
+  const batchStart = entries().length;
+  await Actor.updateDocuments([
+    { _id: hero.id, "system.attributes.hp.value": 10 },
+    { _id: bystander.id, "system.attributes.hp.value": 26 }
+  ]);
+  await nthEntry(batchStart + 2, "an entry for each actor in a batch");
+  const batch = entries().slice(batchStart).map(m => api().entryFor(m));
+  const forActor = actor => batch.find(e => e.actorUuid === actor.uuid);
+  report.equal("a batched update logs the hero's own change", forActor(hero)?.changes[0]?.new, 10);
+  report.equal("…and the bystander's own change", forActor(bystander)?.changes, [{ id: "hp", old: 30, new: 26, diff: -4 }]);
 
   const before = entries().length;
   await hero.update({ name: HERO, "system.details.biography.value": "<p>e2e</p>" });
@@ -435,6 +450,32 @@ async function apiSuite(report) {
     report.equal("…and returning false stops it", entries().length, 0);
   } finally {
     Hooks.off("simpleDamageLog.preCreateEntry", id);
+  }
+}
+
+/** The settings form greys out settings whose parent is off, and follows the GM's ticks live. */
+async function settingsSuite(report) {
+  const app = new foundry.applications.settings.SettingsConfig();
+  await app.render({ force: true });
+  try {
+    const input = key => app.element.querySelector(`[name="${MODULE}.${key}"]`);
+    await waitFor(() => input("allowPlayerView"), "the module's settings in the form");
+    report.check("with player view off, Minimum actor permission is greyed out", input("minPlayerPermission").disabled);
+    report.check("…and so are player undo and limited info", input("allowPlayerUndo").disabled && input("showLimitedInfo").disabled);
+    report.check("settings without a parent are not", !input("clampToMax").disabled && !input("gmOnlyHiddenTokens").disabled);
+
+    const tick = (key, on) => {
+      const box = input(key);
+      box.checked = on;
+      box.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    tick("allowPlayerView", true);
+    report.check("ticking player view enables them", !input("minPlayerPermission").disabled && !input("showLimitedInfo").disabled);
+    report.check("…but not Hide healing, which also needs limited info", input("hideHealingInLimitedInfo").disabled);
+    tick("showLimitedInfo", true);
+    report.check("ticking limited info enables Hide healing", !input("hideHealingInLimitedInfo").disabled);
+  } finally {
+    await app.close();
   }
 }
 

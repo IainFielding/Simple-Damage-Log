@@ -9,7 +9,6 @@
   --sdl-accent: var(--sdl-damage);
   --sdl-damage: #c0392b;
   --sdl-healing: #2e8b57;
-  --sdl-tempmax: #7b5ea7;
   border-left: 4px solid var(--sdl-accent);
   background-image: linear-gradient(color-mix(in srgb, var(--sdl-accent) 10%, transparent),
     color-mix(in srgb, var(--sdl-accent) 10%, transparent));
@@ -19,7 +18,6 @@
 .chat-message.sdl-entry.themed.theme-dark {
   --sdl-damage: #e5675a;
   --sdl-healing: #5cc98b;
-  --sdl-tempmax: #a98bd6;
 }
 
 .chat-message.sdl-entry.sdl-healing { --sdl-accent: var(--sdl-healing); }

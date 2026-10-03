@@ -16,7 +16,11 @@ import { diffChanges } from "./data/changes.mjs";
 import { buildEntry, flavorText } from "./data/entry.mjs";
 import { whisperFor } from "./data/visibility.mjs";
 
-/** The update option that carries a drafted entry from preUpdateActor to updateActor. */
+/**
+ * The update option that carries drafted entries from preUpdateActor to updateActor, keyed by actor
+ * uuid. Foundry hands one options object to every actor in a batched update, so a single draft
+ * would be overwritten by the next actor's and posted against all of them.
+ */
 const DRAFT = `${MODULE_ID}:draft`;
 
 /** Hooked on `preUpdateActor`. Must stay synchronous: it must not delay the update. */
@@ -36,12 +40,12 @@ export function onPreUpdateActor(actor, changes, options, userId) {
   if ( (options.isRest || fromHitDie) && setting(SETTINGS.ignoreRests) ) return;
 
   const hpChanges = diffChanges(current, update);
-  if ( hpChanges.length ) options[DRAFT] = { changes: hpChanges, damage };
+  if ( hpChanges.length ) (options[DRAFT] ??= {})[actor.uuid] = { changes: hpChanges, damage };
 }
 
 /** Hooked on `updateActor`: post the entry drafted for an update that has now happened. */
 export function onUpdateActor(actor, _changes, options, userId) {
-  const draft = options?.[DRAFT];
+  const draft = options?.[DRAFT]?.[actor.uuid];
   if ( !draft || (userId !== game.user.id) ) return;
   try {
     postEntry(actor, draft.changes, draft.damage ?? null);

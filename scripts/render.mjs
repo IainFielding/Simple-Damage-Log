@@ -20,7 +20,9 @@ let compiled = null;
 
 /** Compile the table template ahead of the first entry. Called at init. */
 export function preloadTemplates() {
-  return foundry.applications.handlebars.getTemplate(TABLE).then(fn => compiled = fn);
+  return foundry.applications.handlebars.getTemplate(TABLE)
+    .then(fn => compiled = fn)
+    .catch(err => console.error(`${MODULE_ID} | could not load ${TABLE}`, err));
 }
 
 /** Hooked on `renderChatMessageHTML`. */
