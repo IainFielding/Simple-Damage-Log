@@ -133,7 +133,7 @@ async function logSuite(report) {
   report.equal("…as 8 damage", [entry.kind, entry.total], ["damage", 8]);
   report.check("…against the actor's uuid", entry.actorUuid === hero.uuid, entry.actorUuid);
   report.check("…with no damage types, since none were given", !entry.damage);
-  report.equal("…whispered to the GMs only by default", message.whisper, game.users.filter(u => u.isGM).map(u => u.id));
+  report.equal("…public by default, through limited info", message.whisper, []);
   report.check("…with the flavour line", /8/.test(message.flavor) && /damage/i.test(message.flavor), message.flavor);
   report.check("…and content that holds no numbers", !/22|30/.test(message.content), message.content);
 
@@ -325,7 +325,7 @@ async function visibilitySuite(report) {
   const hero = game.actors.getName(HERO);
   const bystander = game.actors.getName(BYSTANDER);
 
-  await set("allowPlayerView", true);
+  await set("showLimitedInfo", false);
   await hero.update({ "system.attributes.hp.value": 25 });
   let m = await nthEntry(1);
   report.check("with player view on, the owner receives their character's entry", m.whisper.includes(player.id), m.whisper);
@@ -582,6 +582,8 @@ async function leakSuite(report) {
 
 /** The settings form greys out settings whose parent is off, and follows the GM's ticks live. */
 async function settingsSuite(report) {
+  await set("allowPlayerView", false);
+  await set("showLimitedInfo", false);
   const app = new foundry.applications.settings.SettingsConfig();
   await app.render({ force: true });
   try {
@@ -611,14 +613,15 @@ async function settingsSuite(report) {
 /* -------------------------------------------- */
 
 /**
- * Leave the world as the player suite expects it: player view, limited info and player undo on,
- * and one entry each for the hero (owned), the bystander (observed) and the hidden goblin.
+ * Leave the world as the player suite expects it: player view, limited info, player undo and secret
+ * names on, and one entry each for the hero (owned), the bystander (observed) and the hidden goblin.
  */
 export async function preparePlayer() {
   await reset();
   await set("allowPlayerView", true);
   await set("showLimitedInfo", true);
   await set("allowPlayerUndo", true);
+  await set("hideUnknownNames", true);
   await game.actors.getName(HERO).update({ "system.attributes.hp.value": 22 });
   await nthEntry(1);
   await game.actors.getName(BYSTANDER).update({ "system.attributes.hp.value": 24 });

@@ -111,13 +111,13 @@ export async function reset() {
 
 /** The module's defaults, written out so a change to them shows up as a failing suite. */
 export const DEFAULT_SETTINGS = {
-  allowPlayerView: false,
+  allowPlayerView: true,
   minPlayerPermission: 3,
   allowPlayerUndo: false,
-  showLimitedInfo: false,
+  showLimitedInfo: true,
   hideHealingInLimitedInfo: false,
   gmOnlyHiddenTokens: true,
-  hideUnknownNames: true,
+  hideUnknownNames: false,
   clampToMax: true,
   clampToMin: true,
   suppressNotify: true,

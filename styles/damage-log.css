@@ -55,6 +55,12 @@
   font-weight: 600;
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
+/* dnd5e paints every table header red; a healing entry gets the same bar in green. */
+.chat-message.sdl-entry.sdl-healing .sdl-table thead {
+  --sdl-healing-header-1: #1f5c3a;
+  --sdl-healing-header-2: #2e8b57;
+  background: linear-gradient(to right, var(--sdl-healing-header-1), var(--sdl-healing-header-2));
+}
 .sdl-entry .sdl-table tbody tr:nth-child(even) { background: color-mix(in srgb, currentColor 5%, transparent); }
 .sdl-entry .sdl-table .num {
   text-align: right;
