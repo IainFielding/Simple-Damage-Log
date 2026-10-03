@@ -53,7 +53,7 @@ that image; it's there for someone to look at.
 
 | World | Modules | Status |
 | --- | --- | --- |
-| `damage-log-e2e` | the module only | 92 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
+| `damage-log-e2e` | the module only | 93 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
 
 ## Layout
 

@@ -37,12 +37,6 @@ const KNOWN_NOISE = [
     // headless client never renders. Any chat message (an item's Use card) triggers it.
     pattern: /Cannot set properties of null \(setting 'hidden'\)/,
     why: "Foundry's chat-notification toast has no element to render into here"
-  },
-  {
-    // Provoked on purpose by the permissions suite, which tries to equip on a character the
-    // player is not allowed to change, to prove the module refuses.
-    pattern: /lacks permission to update Actor/,
-    why: "the player suite deliberately attempts a forbidden write"
   }
 ];
 

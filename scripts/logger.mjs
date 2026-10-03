@@ -12,7 +12,7 @@ import {
   HOOKS, MODULE_ID, SETTINGS, callCancellable, fireHook, log, setting, settingsSnapshot, t
 } from "./config.mjs";
 import { consume, consumeHitDie } from "./capture.mjs";
-import { diffChanges } from "./data/changes.mjs";
+import { classify, diffChanges } from "./data/changes.mjs";
 import { buildEntry, flavorText } from "./data/entry.mjs";
 import { whisperFor } from "./data/visibility.mjs";
 
@@ -37,10 +37,15 @@ export function onPreUpdateActor(actor, changes, options, userId) {
   // Both are taken whether or not they're used, so they can't attach to a later update.
   const damage = consume(actor, update);
   const fromHitDie = consumeHitDie(actor);
-  if ( (options.isRest || fromHitDie) && setting(SETTINGS.ignoreRests) ) return;
 
   const hpChanges = diffChanges(current, update);
-  if ( hpChanges.length ) (options[DRAFT] ??= {})[actor.uuid] = { changes: hpChanges, damage };
+  if ( !hpChanges.length ) return;
+  // A hit die only ever heals. If the roll wrote nothing (already at max HP), its marker must not
+  // swallow whatever this update is instead.
+  const restHealing = options.isRest || (fromHitDie && (classify(hpChanges).kind === "healing"));
+  if ( restHealing && setting(SETTINGS.ignoreRests) ) return;
+
+  (options[DRAFT] ??= {})[actor.uuid] = { changes: hpChanges, damage };
 }
 
 /** Hooked on `updateActor`: post the entry drafted for an update that has now happened. */

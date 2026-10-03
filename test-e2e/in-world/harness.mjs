@@ -382,9 +382,15 @@ async function restSuite(report) {
     await sleep(400);
     report.equal("with Don't log rests on, a hit die isn't logged either", entries().length, 4);
 
+    // A hit die roll that wrote nothing must not swallow the next change, which here is damage.
+    Hooks.callAll("dnd5e.rollHitDieV2", [], { subject: hero, updates: {} });
+    await hero.update({ "system.attributes.hp.value": hp(hero).value - 3 });
+    await nthEntry(5, "damage right after an empty hit die roll");
+    report.equal("…but damage just after a hit die that healed nothing still is", api().entryFor(entries().at(-1)).kind, "damage");
+
     await set("ignoreRests", false);
     await hero.rollHitDie({ denomination: "d10" }, { configure: false }, { create: false });
-    const die = await nthEntry(5, "an entry for a hit die");
+    const die = await nthEntry(6, "an entry for a hit die");
     report.equal("…but is logged by default", api().entryFor(die).kind, "healing");
   } finally {
     await cls.delete();

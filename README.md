@@ -43,7 +43,8 @@ No libWrapper or other library is needed.
     the entry back to what the settings say.
 - **Players can undo too, if you let them.** **Allow players to undo/redo damage** lets players undo
   changes to actors they own.
-- **Rests are logged.** HP recovered on a rest is logged unless you switch on **Don't log rests**.
+- **Rests are logged.** HP recovered on a rest, including hit dice spent, is logged unless you
+  switch on **Don't log rests**.
 
 ## Settings
 
