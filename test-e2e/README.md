@@ -19,7 +19,8 @@ real dnd5e actors. The rules (diffs, damage or healing, who sees what, undo math
 - Quiet entries never reach core's notify; an ordinary message still does.
 - A batched update of two actors gives each its own entry. The settings form greys out dependent
   settings and follows ticks live.
-- A forged entry renders as a plain message and can't be undone; a forged undo marker on another
+- A forged entry renders as a plain message, can't be undone, and gets no flags or menu items
+  from this module even when the GM reveals it; a forged undo marker on another
   actor's update changes nothing. Changing a visibility setting re-renders only the entries on
   screen.
 - Nothing the module holds grows with use: after 20 rounds of damage, undo and redo, and hit dice
@@ -61,7 +62,7 @@ that image; it's there for someone to look at.
 
 | World | Modules | Status |
 | --- | --- | --- |
-| `damage-log-e2e` | the module only | 111 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
+| `damage-log-e2e` | the module only | 113 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
 
 ## Layout
 

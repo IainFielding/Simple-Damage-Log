@@ -3,7 +3,7 @@
  */
 
 import { MODULE_ID } from "./config.mjs";
-import { resetVisibility, toggleRevert, userCanRevert } from "./actions.mjs";
+import { resetVisibility, toggleRevert, trustedEntry, userCanRevert } from "./actions.mjs";
 import { readEntry } from "./data/entry.mjs";
 
 const messageOf = li => game.messages.get(li?.dataset?.messageId);
@@ -33,7 +33,7 @@ export function onGetChatMessageContextOptions(_app, options) {
   const reset = {
     label: `${MODULE_ID}.menu.resetVisibility`,
     icon: "fa-solid fa-glasses",
-    visible: li => game.user.isGM && (typeof readEntry(messageOf(li))?.public === "boolean"),
+    visible: li => game.user.isGM && (typeof trustedEntry(messageOf(li))?.public === "boolean"),
     onClick: (_event, li) => {
       const message = messageOf(li);
       if ( message ) resetVisibility(message).catch(err => reportFailure("reset visibility", err));

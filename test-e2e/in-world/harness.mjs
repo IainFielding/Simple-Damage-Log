@@ -469,6 +469,19 @@ async function forgerySuite(report) {
   report.check("…and it renders as a plain message, not an entry", !forgedRow.classList.contains("sdl-entry")
     && !forgedRow.querySelector(".sdl-table"));
 
+  // The GM reveals it, as they might any message: it stays a plain message, with no flag written
+  // and no Reset Visibility acting on the forger's data.
+  await forged.update({ whisper: [], blind: false });
+  await sleep(300);
+  report.check("revealing a forged entry writes no flag to it", forged.getFlag(MODULE, "public") === undefined);
+  const row = await waitFor(() => rowOf(forged), "the revealed forged message");
+  row.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+  const menu = await waitFor(() => document.querySelector("#context-menu"), "the forged message's menu");
+  const labels = [...menu.querySelectorAll(".context-item")].map(el => el.textContent.trim());
+  document.querySelector("#context-menu")?.remove();
+  report.check("…and its menu offers none of this module's items",
+    !labels.some(l => ["Reset Visibility", "Undo Damage", "Redo Damage"].includes(l)), labels.join(" | "));
+
   // A real entry, then an unrelated actor update carrying an undo marker that names it.
   await bystander.update({ "system.attributes.hp.value": 22 });
   const real = await nthEntry(1, "a real entry");

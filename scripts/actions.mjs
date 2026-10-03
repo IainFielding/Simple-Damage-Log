@@ -139,7 +139,7 @@ function entryMarked(message, reverted) {
 
 /** Put an entry's whisper list back to what the settings give it, and forget any Reveal/Conceal. */
 export async function resetVisibility(message) {
-  const entry = readEntry(message);
+  const entry = trustedEntry(message);
   if ( !entry || !game.user.isGM ) return;
   const actor = actorOf(entry);
   const whisper = whisperFor({

@@ -3,8 +3,7 @@
  */
 
 import { HOOKS, MODULE_ID, fireHook } from "./config.mjs";
-import { flagWriterFor } from "./actions.mjs";
-import { readEntry } from "./data/entry.mjs";
+import { flagWriterFor, trustedEntry } from "./actions.mjs";
 
 /**
  * Hooked on `updateActor`, which runs on every client. After an undo or redo, exactly one client,
@@ -16,7 +15,7 @@ export function onUpdateActor(actor, _changes, options) {
   const message = game.messages.get(context.messageId);
   if ( !message || (flagWriterFor(message)?.id !== game.user.id) ) return;
   // Only an update to the entry's own actor may mark it; the option can be put on any update.
-  if ( readEntry(message)?.actorUuid !== actor?.uuid ) return;
+  if ( trustedEntry(message)?.actorUuid !== actor?.uuid ) return;
   message.setFlag(MODULE_ID, "reverted", !!context.reverted)
     .catch(err => console.error(`${MODULE_ID} | could not mark entry ${message.id}`, err));
 }
@@ -27,7 +26,7 @@ export function onUpdateActor(actor, _changes, options) {
  * deletes the flag in the same update; that is left alone.
  */
 export function onPreUpdateChatMessage(message, changes) {
-  if ( !readEntry(message) || !("whisper" in changes) ) return;
+  if ( !("whisper" in changes) || !trustedEntry(message) ) return;
   const current = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.public`);
   if ( current instanceof foundry.data.operators.ForcedDeletion ) return;
   foundry.utils.setProperty(changes, `flags.${MODULE_ID}.public`, !changes.whisper?.length);
@@ -36,6 +35,6 @@ export function onPreUpdateChatMessage(message, changes) {
 /** Hooked on `updateChatMessage`: announce undo / redo on every client. */
 export function onUpdateChatMessage(message, changes) {
   const reverted = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.reverted`);
-  if ( (reverted === undefined) || !readEntry(message) ) return;
+  if ( (reverted === undefined) || !trustedEntry(message) ) return;
   fireHook(HOOKS.reverted, { message, reverted: !!reverted });
 }
