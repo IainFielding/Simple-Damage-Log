@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULTS, OWNERSHIP, SETTINGS } from "../scripts/config.mjs";
-import { canRevert, canViewTable, isHiddenFrom, whisperFor } from "../scripts/data/visibility.mjs";
+import { canRevert, canViewTable, isHiddenFrom, isTrustedAuthor, whisperFor } from "../scripts/data/visibility.mjs";
 
 const gm = { id: "gm", isGM: true };
 const owner = { id: "owner", isGM: false };
@@ -95,7 +95,7 @@ describe("canViewTable / isHiddenFrom", () => {
 });
 
 describe("canRevert", () => {
-  const revert = (user, s) => canRevert({ user, settings: s, hasPermission });
+  const revert = (user, s, author = gm) => canRevert({ user, author, settings: s, hasPermission });
 
   it("lets GMs always revert", () => {
     expect(revert(gm, settings())).toBe(true);
@@ -106,5 +106,21 @@ describe("canRevert", () => {
     const s = settings({ [SETTINGS.allowPlayerView]: true, [SETTINGS.allowPlayerUndo]: true });
     expect(revert(owner, s)).toBe(true);
     expect(revert(observer, s)).toBe(false);
+  });
+});
+
+describe("forged entries", () => {
+  it("trusts an entry from a GM or the actor's owner", () => {
+    expect(isTrustedAuthor(gm, hasPermission)).toBe(true);
+    expect(isTrustedAuthor(owner, hasPermission)).toBe(true);
+  });
+
+  it("doesn't trust one from a player who couldn't have changed the actor", () => {
+    expect(isTrustedAuthor(observer, hasPermission)).toBe(false);
+    expect(isTrustedAuthor(null, hasPermission)).toBe(false);
+  });
+
+  it("won't let even a GM undo a forged entry", () => {
+    expect(canRevert({ user: gm, author: observer, settings: settings(), hasPermission })).toBe(false);
   });
 });

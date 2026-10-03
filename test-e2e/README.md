@@ -19,6 +19,8 @@ real dnd5e actors. The rules (diffs, damage or healing, who sees what, undo math
 - Quiet entries never reach core's notify; an ordinary message still does.
 - A batched update of two actors gives each its own entry. The settings form greys out dependent
   settings and follows ticks live.
+- A forged entry, or a forged undo marker on another actor's update, changes nothing. An update
+  another module adjusts after this one logs the HP it really reached.
 - As the player: the owned character's entry shows its table, an observed one shows the flavour
   only, the hidden goblin's isn't visible, Undo works on the player's own character and is refused
   on someone else's.
@@ -53,7 +55,7 @@ that image; it's there for someone to look at.
 
 | World | Modules | Status |
 | --- | --- | --- |
-| `damage-log-e2e` | the module only | 93 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
+| `damage-log-e2e` | the module only | 97 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
 
 ## Layout
 
@@ -61,5 +63,5 @@ that image; it's there for someone to look at.
 | --- | --- | --- |
 | `run.mjs`, `provision.mjs`, `lib/` | Node | Starts Foundry, joins with Playwright, prints reports |
 | `in-world/provision.mjs` | the page | Fixtures: the player, `[e2e] Hero`, `[e2e] Bystander`, `[e2e] Goblin`, and a scene with a seen and a hidden goblin token |
-| `in-world/harness.mjs` | GM page | Log, damage type, undo, menu, visibility, rest, quiet, API and settings suites; the player set-up; the showcase |
+| `in-world/harness.mjs` | GM page | Log, damage type, undo, menu, visibility, rest, quiet, forgery, API and settings suites; the player set-up; the showcase |
 | `in-world/player.mjs` | player page | What a player receives, sees and may undo |

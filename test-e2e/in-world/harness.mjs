@@ -110,6 +110,7 @@ export async function all() {
   results.push(await suite("visibilitySuite", visibilitySuite));
   results.push(await suite("restSuite", restSuite));
   results.push(await suite("quietSuite", quietSuite));
+  results.push(await suite("forgerySuite", forgerySuite));
   results.push(await suite("apiSuite", apiSuite));
   results.push(await suite("settingsSuite", settingsSuite));
   return Object.fromEntries(results);
@@ -164,6 +165,21 @@ async function logSuite(report) {
   const forActor = actor => batch.find(e => e.actorUuid === actor.uuid);
   report.equal("a batched update logs the hero's own change", forActor(hero)?.changes[0]?.new, 10);
   report.equal("…and the bystander's own change", forActor(bystander)?.changes, [{ id: "hp", old: 30, new: 26, diff: -4 }]);
+
+  // Another module adjusting the HP after this module's hook: the entry shows what happened.
+  const cap = Hooks.on("preUpdateActor", (actor, changes) => {
+    if ( (actor === hero) && (foundry.utils.getProperty(changes, "system.attributes.hp.value") === 5) ) {
+      foundry.utils.setProperty(changes, "system.attributes.hp.value", 15);
+    }
+  });
+  try {
+    const capStart = entries().length;
+    await hero.update({ "system.attributes.hp.value": 5 });
+    const capped = await nthEntry(capStart + 1, "an entry for an adjusted update");
+    report.equal("an update another module adjusts logs the HP it really reached", api().entryFor(capped).changes[0].new, 15);
+  } finally {
+    Hooks.off("preUpdateActor", cap);
+  }
 
   const before = entries().length;
   await hero.update({ name: HERO, "system.details.biography.value": "<p>e2e</p>" });
@@ -426,6 +442,34 @@ async function quietSuite(report) {
   } finally {
     ui.chat.notify = original;
   }
+}
+
+/** Entries and undo markers a player could forge. */
+async function forgerySuite(report) {
+  const player = game.users.find(u => !u.isGM);
+  const bystander = game.actors.getName(BYSTANDER);
+  const hero = game.actors.getName(HERO);
+
+  // A message carrying this module's flags, authored by a player who only observes the bystander.
+  const forged = await ChatMessage.create({
+    author: player.id,
+    content: "<p>forged</p>",
+    flags: { [MODULE]: {
+      schema: 1, actorUuid: bystander.uuid, kind: "damage", total: 25,
+      changes: [{ id: "hp", old: 30, new: 5, diff: -25 }]
+    } }
+  });
+  report.check("a forged entry from a player who can't change the actor can't be undone, even by the GM",
+    (await api().revert(forged)) === false);
+  report.equal("…and the actor is untouched", hp(bystander).value, MAX_HP);
+
+  // A real entry, then an unrelated actor update carrying an undo marker that names it.
+  await bystander.update({ "system.attributes.hp.value": 22 });
+  const real = await nthEntry(2, "a real entry");
+  await hero.update({ "system.attributes.hp.value": 29 }, { [MODULE]: { messageId: real.id, reverted: true } });
+  await sleep(400);
+  report.check("an undo marker on another actor's update doesn't mark the entry",
+    game.messages.get(real.id).getFlag(MODULE, "reverted") !== true);
 }
 
 /** The ready hook and the API's shape. */

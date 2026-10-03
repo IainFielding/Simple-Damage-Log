@@ -56,7 +56,8 @@ export function readEntry(message) {
  */
 export function flavorText(entry, { showTypes, t, typeLabel }) {
   const parts = shownParts(entry, showTypes).filter(p => p.value);
-  const types = parts.map(p => `${p.value} ${typeLabel(p.type).toLowerCase()}`).join(", ");
+  // The label as the system gives it: lowercasing is wrong in languages that capitalise nouns.
+  const types = parts.map(p => `${p.value} ${typeLabel(p.type)}`).join(", ");
   const onlyTempmax = entry.changes.every(c => c.id === "tempmax");
   const key = onlyTempmax ? `flavor.tempmax.${entry.kind}` : `flavor.${entry.kind}`;
   const text = t(key, { amount: entry.total });

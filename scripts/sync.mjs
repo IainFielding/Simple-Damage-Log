@@ -10,11 +10,13 @@ import { readEntry } from "./data/entry.mjs";
  * Hooked on `updateActor`, which runs on every client. After an undo or redo, exactly one client,
  * the one {@link flagWriterFor} picks, marks the entry. Whoever clicked Undo may not own the message.
  */
-export function onUpdateActor(_actor, _changes, options) {
+export function onUpdateActor(actor, _changes, options) {
   const context = options?.[MODULE_ID];
   if ( !context?.messageId ) return;
   const message = game.messages.get(context.messageId);
   if ( !message || (flagWriterFor(message)?.id !== game.user.id) ) return;
+  // Only an update to the entry's own actor may mark it; the option can be put on any update.
+  if ( readEntry(message)?.actorUuid !== actor?.uuid ) return;
   message.setFlag(MODULE_ID, "reverted", !!context.reverted)
     .catch(err => console.error(`${MODULE_ID} | could not mark entry ${message.id}`, err));
 }

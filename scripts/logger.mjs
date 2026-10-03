@@ -45,15 +45,24 @@ export function onPreUpdateActor(actor, changes, options, userId) {
   const restHealing = options.isRest || (fromHitDie && (classify(hpChanges).kind === "healing"));
   if ( restHealing && setting(SETTINGS.ignoreRests) ) return;
 
-  (options[DRAFT] ??= {})[actor.uuid] = { changes: hpChanges, damage };
+  // Only the "before" values travel; "after" is read from the actor once the update lands, so an
+  // update another module adjusts after this hook still logs what actually happened.
+  (options[DRAFT] ??= {})[actor.uuid] = { before: snapshot(current), damage };
+}
+
+/** The tracked HP fields, as plain numbers. */
+function snapshot(hp) {
+  return { value: hp?.value ?? 0, temp: hp?.temp ?? 0, tempmax: hp?.tempmax ?? 0 };
 }
 
 /** Hooked on `updateActor`: post the entry drafted for an update that has now happened. */
 export function onUpdateActor(actor, _changes, options, userId) {
   const draft = options?.[DRAFT]?.[actor.uuid];
   if ( !draft || (userId !== game.user.id) ) return;
+  const hpChanges = diffChanges(draft.before, snapshot(actor.system?.attributes?.hp));
+  if ( !hpChanges.length ) return;
   try {
-    postEntry(actor, draft.changes, draft.damage ?? null);
+    postEntry(actor, hpChanges, draft.damage ?? null);
   } catch ( err ) {
     // A logging failure must never take anything else down with it.
     console.error(`${MODULE_ID} | could not log an HP change`, err);

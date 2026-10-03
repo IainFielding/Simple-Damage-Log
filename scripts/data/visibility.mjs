@@ -76,10 +76,25 @@ export function isHiddenFrom({ canTable, entry, settings }) {
 }
 
 /**
- * Whether a user may undo or redo an entry: GMs always; players when player undo (and player
- * view, which the settings form makes it depend on) is on and they own the actor.
+ * Whether an entry could have been posted by this module for its actor: its author is a GM or
+ * owns the actor, i.e. could have made that HP change themselves. Any player can create a chat
+ * message carrying these flags, so an entry from anyone else is a forgery, and undoing it would
+ * let them change an actor they can't touch through whoever clicks Undo.
+ * @param {{isGM: boolean}|null} author
+ * @param {PermissionTest} hasPermission
  */
-export function canRevert({ user, settings, hasPermission }) {
+export function isTrustedAuthor(author, hasPermission) {
+  if ( !author ) return false;
+  return author.isGM || hasPermission(author, OWNERSHIP.OWNER);
+}
+
+/**
+ * Whether a user may undo or redo an entry: GMs always; players when player undo (and player
+ * view, which the settings form makes it depend on) is on and they own the actor. Never for an
+ * entry whose author couldn't have made the change (see {@link isTrustedAuthor}).
+ */
+export function canRevert({ user, author, settings, hasPermission }) {
+  if ( !isTrustedAuthor(author, hasPermission) ) return false;
   if ( user.isGM ) return true;
   return !!settings[SETTINGS.allowPlayerView] && !!settings[SETTINGS.allowPlayerUndo]
     && hasPermission(user, OWNERSHIP.OWNER);

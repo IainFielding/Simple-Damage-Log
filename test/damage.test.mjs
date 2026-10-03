@@ -47,7 +47,7 @@ describe("flavorText", () => {
       parts: [{ type: "slashing", value: 8, mods: [] }, { type: "fire", value: 4, mods: [] }, { type: "cold", value: 0, mods: [] }]
     });
     expect(flavorText(e, { showTypes: true, t, typeLabel }))
-      .toBe('flavor.withTypes{"text":"flavor.damage{\\"amount\\":12}","types":"8 slashing, 4 fire"}');
+      .toBe('flavor.withTypes{"text":"flavor.damage{\\"amount\\":12}","types":"8 SLASHING, 4 FIRE"}');
     expect(flavorText(e, { showTypes: false, t, typeLabel })).toBe('flavor.damage{"amount":12}');
   });
 

@@ -23,6 +23,7 @@ export function userCanRevert(message) {
   const actor = actorOf(entry);
   return canRevert({
     user: game.user,
+    author: message.author ?? null,
     settings: settingsSnapshot(),
     hasPermission: (user, level) => !!actor?.testUserPermission(user, level)
   });
