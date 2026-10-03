@@ -7,6 +7,7 @@
  */
 
 import { CSS, MODULE_ID, SETTINGS, settingsSnapshot, t, tpl } from "./config.mjs";
+import { actorOf } from "./actions.mjs";
 import { readEntry, shownParts } from "./data/entry.mjs";
 import { DISPLAY_ORDER } from "./data/tracked.mjs";
 import { canViewTable, isHiddenFrom } from "./data/visibility.mjs";
@@ -79,15 +80,6 @@ function tableData(entry, settings) {
       : t("table.source", { alias: source.alias })) : "",
     headers: { old: t("table.old"), diff: t("table.diff"), new: t("table.new") }
   };
-}
-
-/** Resolve an entry's actor; null if it has been deleted. */
-function actorOf(entry) {
-  try {
-    return fromUuidSync(entry.actorUuid) ?? null;
-  } catch {
-    return null;
-  }
 }
 
 /** Scroll to, and briefly highlight, the chat card the damage was applied from. */

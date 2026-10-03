@@ -1,23 +1,28 @@
 /**
  * Posting an entry when an actor's hit points change.
  *
- * `preUpdateActor` runs only on the client making the change, before it is sent, while the actor
- * still holds the old values, which is exactly the moment both sides of the diff are at hand.
+ * Two halves, both on the client making the change:
+ *   preUpdateActor  the actor still holds the old values, so the diff is worked out here and
+ *                   carried in the update's options
+ *   updateActor     the update went through, so the entry is posted here. An update that another
+ *                   module vetoes, or the server refuses, never gets this far and leaves no entry
  */
 
 import {
   HOOKS, MODULE_ID, SETTINGS, callCancellable, fireHook, log, setting, settingsSnapshot, t
 } from "./config.mjs";
-import { consume } from "./capture.mjs";
+import { consume, consumeHitDie } from "./capture.mjs";
 import { diffChanges } from "./data/changes.mjs";
 import { buildEntry, flavorText } from "./data/entry.mjs";
 import { whisperFor } from "./data/visibility.mjs";
 
-/** Hooked on `preUpdateActor`. Must stay synchronous: returning a Promise is not a veto, but it must not delay the update. */
+/** The update option that carries a drafted entry from preUpdateActor to updateActor. */
+const DRAFT = `${MODULE_ID}:draft`;
+
+/** Hooked on `preUpdateActor`. Must stay synchronous: it must not delay the update. */
 export function onPreUpdateActor(actor, changes, options, userId) {
   if ( userId !== game.user.id ) return;
   if ( options?.[MODULE_ID] ) return; // our own undo / redo
-  if ( options?.isRest && setting(SETTINGS.ignoreRests) ) return;
 
   // The prepared values, not `_source`: dnd5e caps a stored HP above max to max when it prepares
   // the actor, so the prepared value is the one the sheet showed and the "Old" the user expects.
@@ -25,13 +30,23 @@ export function onPreUpdateActor(actor, changes, options, userId) {
   const update = foundry.utils.getProperty(changes, "system.attributes.hp");
   if ( !current || !update ) return; // group actors have no HP
 
-  const hpChanges = diffChanges(current, update);
-  if ( !hpChanges.length ) return;
+  // Both are taken whether or not they're used, so they can't attach to a later update.
+  const damage = consume(actor, update);
+  const fromHitDie = consumeHitDie(actor);
+  if ( (options.isRest || fromHitDie) && setting(SETTINGS.ignoreRests) ) return;
 
+  const hpChanges = diffChanges(current, update);
+  if ( hpChanges.length ) options[DRAFT] = { changes: hpChanges, damage };
+}
+
+/** Hooked on `updateActor`: post the entry drafted for an update that has now happened. */
+export function onUpdateActor(actor, _changes, options, userId) {
+  const draft = options?.[DRAFT];
+  if ( !draft || (userId !== game.user.id) ) return;
   try {
-    postEntry(actor, hpChanges, consume(actor, update));
+    postEntry(actor, draft.changes, draft.damage ?? null);
   } catch ( err ) {
-    // A logging failure must never block the HP change itself.
+    // A logging failure must never take anything else down with it.
     console.error(`${MODULE_ID} | could not log an HP change`, err);
   }
 }

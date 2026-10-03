@@ -2,7 +2,7 @@
  * Working out what an HP update changed, and whether that was damage or healing.
  */
 
-import { DISPLAY_ORDER, TRACKED, num } from "./tracked.mjs";
+import { DISPLAY_ORDER, TRACKED, num, trackedById } from "./tracked.mjs";
 
 /**
  * @typedef {object} HpChange
@@ -44,7 +44,7 @@ export function classify(changes) {
   let counts = false;
   let tempmax = 0;
   for ( const change of changes ) {
-    const field = TRACKED.find(f => f.id === change.id);
+    const field = trackedById(change.id);
     if ( field?.counts ) {
       counted += change.diff;
       counts = true;

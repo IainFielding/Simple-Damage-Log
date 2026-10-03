@@ -8,6 +8,9 @@ import { readEntry } from "./data/entry.mjs";
 
 const messageOf = li => game.messages.get(li?.dataset?.messageId);
 
+/** A menu action's promise rejected, e.g. the server refused the actor update. */
+const reportFailure = (what, err) => console.error(`${MODULE_ID} | ${what} failed`, err);
+
 /** An Undo/Redo item, shown for one kind of entry in one state. */
 function revertItem(kind, reverted, key, icon) {
   return {
@@ -20,7 +23,7 @@ function revertItem(kind, reverted, key, icon) {
     },
     onClick: (_event, li) => {
       const message = messageOf(li);
-      if ( message ) toggleRevert(message);
+      if ( message ) toggleRevert(message).catch(err => reportFailure("undo / redo", err));
     }
   };
 }
@@ -33,7 +36,7 @@ export function onGetChatMessageContextOptions(_app, options) {
     visible: li => game.user.isGM && (typeof readEntry(messageOf(li))?.public === "boolean"),
     onClick: (_event, li) => {
       const message = messageOf(li);
-      if ( message ) resetVisibility(message);
+      if ( message ) resetVisibility(message).catch(err => reportFailure("reset visibility", err));
     }
   };
 

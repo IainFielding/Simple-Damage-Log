@@ -14,7 +14,7 @@
  */
 
 import { log } from "./config.mjs";
-import { summariseDamage } from "./data/damage-parts.mjs";
+import { hasTypedParts, summariseDamage } from "./data/damage-parts.mjs";
 
 /** How long a pending context may wait for its update. applyDamage awaits nothing in between. */
 const PENDING_TTL_MS = 2000;
@@ -38,7 +38,9 @@ export function onCalculateDamage(_actor, damages, options) {
  */
 export function onPreApplyDamage(actor, _amount, updates, options) {
   if ( !actor?.uuid ) return;
-  const summary = calculated.get(options) ?? null;
+  // A token bar edit or a bare number comes through untyped; there is no breakdown to keep.
+  const calc = calculated.get(options);
+  const summary = hasTypedParts(calc) ? calc : null;
   const source = sourceOf(options?.originatingMessage);
   pending.set(actor.uuid, {
     damage: (summary || source) ? { ...(summary ?? { parts: [], threshold: false }), ...(source ? { source } : {}) } : null,
@@ -66,6 +68,29 @@ export function consume(actor, hpUpdate) {
     }
   }
   return entry.damage;
+}
+
+/** actor uuid → when dnd5e last announced a hit die roll for it. */
+const hitDice = new Map();
+
+/**
+ * Hooked on `dnd5e.rollHitDieV2`, which fires just before dnd5e writes the healing. Unlike a rest's
+ * own update, that write carries no `isRest` option, so this is how it is recognised as rest healing.
+ */
+export function onRollHitDie(_rolls, { subject } = {}) {
+  if ( subject?.uuid ) hitDice.set(subject.uuid, Date.now());
+}
+
+/**
+ * Whether an actor's update is the healing from a hit die just rolled. Taken once.
+ * @param {object} actor
+ * @returns {boolean}
+ */
+export function consumeHitDie(actor) {
+  const at = hitDice.get(actor?.uuid);
+  if ( at === undefined ) return false;
+  hitDice.delete(actor.uuid);
+  return (Date.now() - at) <= PENDING_TTL_MS;
 }
 
 /** Where the damage came from, from the chat card it was applied from. */

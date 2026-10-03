@@ -215,6 +215,13 @@ async function undoSuite(report) {
   report.check("the undone entry is struck through", (await waitFor(() => rowOf(message)?.classList.contains("sdl-reverted") && rowOf(message), "the reverted class")));
   report.check("undoing again is refused", (await api().revert(message)) === false);
 
+  // Two redos fired together, before either has been marked: only one may apply.
+  const both = await Promise.all([api().reapply(message), api().reapply(message)]);
+  report.equal("two redos at once apply only one", both.filter(Boolean).length, 1);
+  report.equal("…so the 8 comes off once", hp(hero).value, 20);
+  await api().revert(message);
+  await waitFor(() => game.messages.get(message.id).getFlag(MODULE, "reverted") === true, "the entry to be undone again");
+
   report.check("redo succeeds", await api().reapply(message));
   await waitFor(() => game.messages.get(message.id).getFlag(MODULE, "reverted") === false, "the entry to be marked redone");
   report.equal("redo takes the 8 off again", hp(hero).value, 20);
@@ -347,6 +354,26 @@ async function restSuite(report) {
   await waitFor(() => hp(hero).value === MAX_HP, "the second long rest to heal");
   await sleep(400);
   report.equal("with Don't log rests on, it isn't", entries().length, 3);
+
+  // Hit dice spent in a short rest heal through their own update, which carries no isRest.
+  await hero.update({ "system.attributes.hp.value": 10 });
+  await nthEntry(4);
+  const [cls] = await hero.createEmbeddedDocuments("Item", [{
+    name: "[e2e] Fighter", type: "class", system: { levels: 3, hd: { denomination: "d10", spent: 0 } }
+  }]);
+  try {
+    await hero.rollHitDie({ denomination: "d10" }, { configure: false }, { create: false });
+    await waitFor(() => hp(hero).value > 10, "the hit die to heal");
+    await sleep(400);
+    report.equal("with Don't log rests on, a hit die isn't logged either", entries().length, 4);
+
+    await set("ignoreRests", false);
+    await hero.rollHitDie({ denomination: "d10" }, { configure: false }, { create: false });
+    const die = await nthEntry(5, "an entry for a hit die");
+    report.equal("…but is logged by default", api().entryFor(die).kind, "healing");
+  } finally {
+    await cls.delete();
+  }
 }
 
 /**
@@ -382,6 +409,17 @@ async function quietSuite(report) {
 
 /** The ready hook and the API's shape. */
 async function apiSuite(report) {
+  // Another module vetoing the update: no HP change, so no entry.
+  const veto = Hooks.on("preUpdateActor", () => false);
+  try {
+    await game.actors.getName(HERO).update({ "system.attributes.hp.value": 12 });
+    await sleep(400);
+    report.equal("an update another module vetoes leaves no entry", entries().length, 0);
+    report.equal("…and no HP change", hp(game.actors.getName(HERO)).value, MAX_HP);
+  } finally {
+    Hooks.off("preUpdateActor", veto);
+  }
+
   const a = api();
   report.check("the API is published", !!a && ["isEntry", "entryFor", "revert", "reapply"].every(k => typeof a[k] === "function"));
 
