@@ -614,6 +614,13 @@ export async function preparePlayer() {
   await nthEntry(3);
   await tokenActor(SEEN).update({ "system.attributes.hp.value": 18 });
   await nthEntry(4);
+  // An attack the GM rolled privately, then applied to the hero: the player can't see the card.
+  const secret = await ChatMessage.create({
+    content: "<p>A blade from the dark.</p>", speaker: { alias: "[e2e] Shadow Assassin" },
+    whisper: game.users.filter(u => u.isGM).map(u => u.id)
+  });
+  await game.actors.getName(HERO).applyDamage([{ value: 3, type: "piercing" }], { originatingMessage: secret });
+  await nthEntry(5);
   return entries().map(m => m.id);
 }
 

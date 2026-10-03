@@ -100,7 +100,7 @@ function tableData(entry, settings) {
     value: p.value,
     mods: p.mods.map(m => t(`mod.${m}`)).join(", ")
   }));
-  const source = showDetail ? (entry.damage.source ?? null) : null;
+  const source = showDetail ? visibleSource(entry.damage.source) : null;
 
   return {
     rows,
@@ -111,6 +111,18 @@ function tableData(entry, settings) {
       : t("table.source", { alias: source.alias })) : "",
     headers: { old: t("table.old"), diff: t("table.diff"), new: t("table.new") }
   };
+}
+
+/**
+ * The card the damage came from, if this viewer can see it. Its alias may name an attacker they
+ * shouldn't know, a private or blind roll, so it is shown only to those who can read the card.
+ * @param {{messageId: string, alias: string, item?: string}|null} source
+ * @returns {object|null}
+ */
+function visibleSource(source) {
+  if ( !source?.messageId ) return null;
+  const card = game.messages.get(source.messageId);
+  return (card?.visible && card.isContentVisible) ? source : null;
 }
 
 /** Scroll to, and briefly highlight, the chat card the damage was applied from. */

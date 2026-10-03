@@ -24,7 +24,8 @@ real dnd5e actors. The rules (diffs, damage or healing, who sees what, undo math
   screen.
 - Nothing the module holds grows with use: after 20 rounds of damage, undo and redo, and hit dice
   that heal nothing, hook listeners, held contexts and the undo guard are back where they started.
-- As the player, a creature whose token name is secret shows as "Unknown creature" with no portrait. An update
+- As the player, a creature whose token name is secret shows as "Unknown creature" with no portrait,
+  its name nowhere in the HTML. An entry from an attack card the player can't see doesn't name it. An update
   another module adjusts after this one logs the HP it really reached.
 - As the player: the owned character's entry shows its table, an observed one shows the flavour
   only, the hidden goblin's isn't visible, Undo works on the player's own character and is refused
@@ -60,7 +61,7 @@ that image; it's there for someone to look at.
 
 | World | Modules | Status |
 | --- | --- | --- |
-| `damage-log-e2e` | the module only | 108 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
+| `damage-log-e2e` | the module only | 111 assertions, green (2026-10-03, Foundry 14.368, dnd5e 6.0.5) |
 
 ## Layout
 

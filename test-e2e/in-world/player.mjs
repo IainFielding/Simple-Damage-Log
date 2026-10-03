@@ -16,7 +16,7 @@ export async function all() {
     const hero = game.actors.getName(HERO);
 
     report.check("the player owns the hero", hero?.isOwner === true);
-    await waitFor(() => entries().length >= 3, "the entries this player receives");
+    await waitFor(() => entries().length >= 4, "the entries this player receives");
 
     const own = entryFor(HERO);
     report.check("the player receives their own character's entry", !!own);
@@ -39,9 +39,19 @@ export async function all() {
     report.equal("a creature whose name is secret appears as Unknown creature", shownName(), "Unknown creature");
     report.check("…with no portrait of it", goblinRow.querySelector(".message-sender .avatar img")?.getAttribute("src")?.includes("mystery-man"),
       goblinRow.querySelector(".message-sender .avatar img")?.getAttribute("src"));
-    report.check("…and nowhere in the rendered entry", !goblinRow.textContent.includes(SEEN));
+    const html = goblinRow.outerHTML;
+    const at = html.indexOf(SEEN);
+    report.check("…and nowhere in the rendered entry, attributes included", at < 0, html.slice(Math.max(0, at - 60), at + 40));
+    report.check("…and hovering it points at no token", !goblinRow.querySelector("[data-token-uuid], [data-actor-uuid]"));
     const seenName = seenRow.querySelector(".message-sender .title")?.textContent.trim();
     report.equal("a character the player observes keeps its name", seenName, BYSTANDER);
+
+    // The hero was hit by an attack the GM rolled privately: the player sees the table but not who.
+    const stabbed = entries().find(m => (m.speaker?.alias === HERO) && api().entryFor(m)?.damage?.source);
+    const stabbedRow = await renderedRow(stabbed);
+    report.check("an entry from a card the player can't see doesn't name its source",
+      !stabbedRow.querySelector(".sdl-source") && !stabbedRow.outerHTML.includes("Shadow Assassin"));
+    report.check("…while its damage types still show", !!stabbedRow.querySelector(".sdl-parts"));
 
     // v14 hands every client every message; a whisper is filtered by `visible` and never rendered.
     const lurker = entryFor(LURKER);
@@ -62,16 +72,18 @@ export async function all() {
     menu = await waitFor(() => document.querySelector("#context-menu"), "the hero entry's menu");
     labels = [...menu.querySelectorAll(".context-item")].map(el => el.textContent.trim());
     report.check("Undo Damage is offered on the player's own character", labels.includes("Undo Damage"), labels.join(" | "));
+    // The entry took 8; the hero has been hit since, so undo gives back exactly those 8.
+    const beforeUndo = hero.system.attributes.hp.value;
     [...menu.querySelectorAll(".context-item")].find(el => el.textContent.trim() === "Undo Damage")?.click();
-    await waitFor(() => hero.system.attributes.hp.value === MAX_HP, "the player's undo to restore HP");
-    report.check("the player's undo restores the hero's HP", true);
+    await waitFor(() => hero.system.attributes.hp.value === Math.min(beforeUndo + 8, MAX_HP), "the player's undo to restore HP");
+    report.check("the player's undo gives back the entry's 8 HP", true);
     // The GM authored the entry, so the GM's client marks it.
     await waitFor(() => game.messages.get(own.id).getFlag(MODULE, "reverted") === true, "the GM's client to mark the entry");
     report.check("…and the GM's client marks it undone", !!rowOf(own));
 
     // An edit by the player is logged by the player's client.
     const before = entries().length;
-    await hero.update({ "system.attributes.hp.value": 27 });
+    await hero.update({ "system.attributes.hp.value": hero.system.attributes.hp.value - 2 });
     const mine = await nthEntry(before + 1, "the player's own entry");
     report.check("a player's own HP edit is logged, authored by them", mine.author?.id === game.user.id);
     report.check("…and renders with its table for them", !!(await renderedRow(mine)).querySelector(".sdl-table"));
