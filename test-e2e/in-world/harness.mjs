@@ -9,7 +9,7 @@
  */
 
 import {
-  BYSTANDER, HERO, LURKER, MAX_HP, MODULE, SEEN, reset, tokenActor
+  BYSTANDER, HERO, LURKER, MAX_HP, MODULE, SCENE, SEEN, reset, tokenActor
 } from "./provision.mjs";
 
 /* -------------------------------------------- */
@@ -115,6 +115,7 @@ export async function all() {
   results.push(await suite("settingsSuite", settingsSuite));
   results.push(await suite("rerenderSuite", rerenderSuite));
   results.push(await suite("leakSuite", leakSuite));
+  results.push(await suite("cardApplySuite", cardApplySuite));
   return Object.fromEntries(results);
 }
 
@@ -211,7 +212,7 @@ async function damageTypeSuite(report) {
 
   const li = await renderedRow(message);
   report.check("the table lists the parts", li.querySelectorAll(".sdl-parts li").length === 2);
-  report.check("…and links back to the attack", !!li.querySelector(`[data-sdl-source="${attack.id}"]`));
+  report.check("…and names the attack's source, as text", !!li.querySelector(".sdl-source") && !li.querySelector(".sdl-source a"));
 
   // A preview calculation, then an unrelated edit: the edit must not borrow the preview's types.
   goblin.calculateDamage([{ value: 3, type: "cold" }], {});
@@ -543,6 +544,47 @@ async function rerenderSuite(report) {
 }
 
 /**
+ * The path a GM really takes: a spell's damage card, Apply clicked, on an unlinked token. The tray
+ * is handed its target directly, since the headless client has no canvas to select a token on.
+ */
+async function cardApplySuite(report) {
+  const hero = game.actors.getName(HERO);
+  const token = game.scenes.getName(SCENE).tokens.getName(SEEN);
+  const goblin = token.actor;
+  const [spell] = await hero.createEmbeddedDocuments("Item", [{
+    name: `${HERO} Ray`, type: "spell",
+    system: { level: 0, activities: { dnd5eactivity000: {
+      _id: "dnd5eactivity000", type: "damage",
+      damage: { parts: [{ number: 1, denomination: 4, bonus: "5", types: ["cold"] }] }
+    } } }
+  }]);
+  try {
+    const messagesBefore = game.messages.size;
+    await spell.system.activities.contents[0].rollDamage({}, { configure: false }, {});
+    const card = await waitFor(() => game.messages.contents.slice(messagesBefore).find(m => m.rolls?.length), "the damage card");
+    const button = await waitFor(() => rowOf(card)?.querySelector("damage-application .apply-button"), "the Apply button");
+    const targets = button.closest("damage-application").targetList;
+    targets.targetGroups = {};
+    targets.targetList.replaceChildren(targets.buildTargetListEntry({ name: token.name, uuid: token.uuid }));
+
+    const hpBefore = hp(goblin).value;
+    let updates = 0;
+    const hookId = Hooks.on("updateActor", actor => { if ( actor === goblin ) updates++; });
+    button.click();
+    const message = await nthEntry(1, "an entry from the card's Apply");
+    await sleep(800);
+    Hooks.off("updateActor", hookId);
+
+    report.check("Apply damages the goblin", hp(goblin).value < hpBefore, `${hpBefore} -> ${hp(goblin).value}`);
+    report.equal("…in one update", updates, 1);
+    report.equal("…which posts one entry", entries().length, 1);
+    report.equal("…naming the card it came from", api().entryFor(message).damage?.source?.messageId, card.id);
+  } finally {
+    await spell.delete();
+  }
+}
+
+/**
  * Nothing the module holds grows with use: hook listeners, the damage and hit die contexts that
  * bridge dnd5e's hooks to the actor update, and the undo guard all return to where they started
  * after many rounds of damage, undo, redo and hit dice that heal nothing.
@@ -638,6 +680,24 @@ export async function preparePlayer() {
   await game.actors.getName(HERO).applyDamage([{ value: 3, type: "piercing" }], { originatingMessage: secret });
   await nthEntry(5);
   return entries().map(m => m.id);
+}
+
+/**
+ * Run by the runner while a second Gamemaster client is connected: one HP change still posts one
+ * entry, not one per client the user is logged in on.
+ */
+export async function secondClientSuite() {
+  const report = new Report();
+  try {
+    await reset();
+    await tokenActor(SEEN).applyDamage([{ value: 5, type: "cold" }]);
+    await nthEntry(1, "the entry");
+    await sleep(1500);
+    report.equal("a second client of the same user posts no copy", entries().length, 1);
+  } catch ( err ) {
+    report.fail("secondClientSuite threw", err);
+  }
+  return { secondClientSuite: report.summary };
 }
 
 /**

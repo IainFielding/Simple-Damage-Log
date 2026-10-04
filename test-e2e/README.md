@@ -5,7 +5,8 @@ real dnd5e actors. The rules (diffs, damage or healing, who sees what, undo math
 (`npm test` at the repo root). This harness covers what those unit tests can't:
 
 - A sheet edit, a token actor's update and dnd5e's `applyDamage` each post one entry, with the
-  right rows, and an update that doesn't touch HP posts nothing.
+  right rows, and an update that doesn't touch HP posts nothing. So does Apply on a spell's damage
+  card, and so does a change made while the same user has a second client connected.
 - dnd5e really hands over its damage types: resistance halves fire and the entry says so, and the
   entry links back to the chat card the damage came from. A damage preview's types don't leak into
   the next edit.

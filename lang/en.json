@@ -43,9 +43,6 @@
       "undo": "undo",
       "redo": "redo"
     },
-    "notify": {
-      "sourceNotLoaded": "That chat card isn't loaded in the log. Scroll up to load older messages."
-    },
     "error": {
       "notAllowed": "Damage Log | You aren't allowed to {verb} this {what}.",
       "actorMissing": "Damage Log | That actor no longer exists.",

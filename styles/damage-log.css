@@ -85,14 +85,6 @@
   margin: 4px 0 0;
   font-size: var(--font-size-11, 11px);
 }
-.sdl-entry .sdl-source a { cursor: pointer; }
-
-/* The card a "from …" link jumped to. */
-.chat-message.sdl-flash { animation: sdl-flash 1.5s ease-out; }
-@keyframes sdl-flash {
-  from { box-shadow: 0 0 0 3px var(--color-warm-2, #ff6400); }
-  to { box-shadow: 0 0 0 3px transparent; }
-}
 
 /* Settings that don't apply until their parent setting is ticked. */
 .form-group.sdl-disabled { opacity: 0.5; }
