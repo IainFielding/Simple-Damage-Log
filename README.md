@@ -25,7 +25,7 @@ No libWrapper or other library is needed.
 - **Logs every HP change.** HP, temp HP and temporary max HP (Aid, Life Drain) each get a row: old,
   change, new. Damage entries have a red edge, healing a green one.
 - **Knows what hit you.** Damage applied from a chat card lists its types ("8 slashing, 4 fire"),
-  flags resistance, vulnerability, immunity and damage thresholds, and links back to the attack's card.
+  flags resistance, vulnerability, immunity and damage thresholds, and names the card it came from.
   A change typed into the sheet or the token bar is logged without types.
 - **Undo and redo.** Right-click an entry and choose **Undo Damage** or **Undo Healing**. The HP goes
   back relative to what it is now, so anything since is kept. The entry is struck through; right-click

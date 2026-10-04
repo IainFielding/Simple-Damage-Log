@@ -50,7 +50,6 @@ export async function onRenderChatMessage(message, html) {
   content.innerHTML = compiled(tableData(entry, settings), {
     allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true
   });
-  content.querySelector("[data-sdl-source]")?.addEventListener("click", onSourceClick);
 }
 
 /**
@@ -123,25 +122,6 @@ function visibleSource(source) {
   if ( !source?.messageId ) return null;
   const card = game.messages.get(source.messageId);
   return (card?.visible && card.isContentVisible) ? source : null;
-}
-
-/** Scroll to, and briefly highlight, the chat card the damage was applied from. */
-function onSourceClick(event) {
-  event.preventDefault();
-  const id = event.currentTarget.dataset.sdlSource;
-  const log = event.currentTarget.closest(".chat-log") ?? document.querySelector("#chat .chat-log");
-  const card = log?.querySelector(`.message[data-message-id="${cssEscape(id)}"]`);
-  if ( !card ) {
-    ui.notifications.info(t("notify.sourceNotLoaded"));
-    return;
-  }
-  card.scrollIntoView({ behavior: "smooth", block: "center" });
-  card.classList.add("sdl-flash");
-  setTimeout(() => card.classList.remove("sdl-flash"), 1500);
-}
-
-function cssEscape(value) {
-  return globalThis.CSS?.escape ? globalThis.CSS.escape(value) : String(value).replace(/"/g, "");
 }
 
 /**

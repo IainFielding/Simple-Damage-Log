@@ -211,7 +211,7 @@ async function damageTypeSuite(report) {
 
   const li = await renderedRow(message);
   report.check("the table lists the parts", li.querySelectorAll(".sdl-parts li").length === 2);
-  report.check("…and links back to the attack", !!li.querySelector(`[data-sdl-source="${attack.id}"]`));
+  report.check("…and names the attack's source, as text", !!li.querySelector(".sdl-source") && !li.querySelector(".sdl-source a"));
 
   // A preview calculation, then an unrelated edit: the edit must not borrow the preview's types.
   goblin.calculateDamage([{ value: 3, type: "cold" }], {});
