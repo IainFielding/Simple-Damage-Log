@@ -23,6 +23,13 @@ import { nameIsSecret, whisperFor } from "./data/visibility.mjs";
  */
 const DRAFT = `${MODULE_ID}:draft`;
 
+/**
+ * This client, as opposed to this user. One user can be logged in on several clients at once (the
+ * desktop app and a browser tab), and the update's options reach all of them with the user's id,
+ * so the user check alone would have each of them post the entry.
+ */
+const CLIENT_ID = foundry.utils.randomID();
+
 /** Hooked on `preUpdateActor`. Must stay synchronous: it must not delay the update. */
 export function onPreUpdateActor(actor, changes, options, userId) {
   if ( userId !== game.user.id ) return;
@@ -47,7 +54,7 @@ export function onPreUpdateActor(actor, changes, options, userId) {
 
   // Only the "before" values travel; "after" is read from the actor once the update lands, so an
   // update another module adjusts after this hook still logs what actually happened.
-  (options[DRAFT] ??= {})[actor.uuid] = { before: snapshot(current), damage };
+  (options[DRAFT] ??= {})[actor.uuid] = { before: snapshot(current), damage, client: CLIENT_ID };
 }
 
 /** The tracked HP fields, as plain numbers. */
@@ -58,7 +65,7 @@ function snapshot(hp) {
 /** Hooked on `updateActor`: post the entry drafted for an update that has now happened. */
 export function onUpdateActor(actor, _changes, options, userId) {
   const draft = options?.[DRAFT]?.[actor.uuid];
-  if ( !draft || (userId !== game.user.id) ) return;
+  if ( !draft || (userId !== game.user.id) || (draft.client !== CLIENT_ID) ) return;
   const hpChanges = diffChanges(draft.before, snapshot(actor.system?.attributes?.hp));
   if ( !hpChanges.length ) return;
   try {

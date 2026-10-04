@@ -48,6 +48,17 @@ try {
 
   failed += report(await gm.inWorld("harness.mjs", "all"), only);
 
+  if ( !only || only.includes("secondClientSuite") ) {
+    const second = await Session.open();
+    console.log(`
+joined a second client as ${second.userName}`);
+    try {
+      failed += report(await gm.inWorld("harness.mjs", "secondClientSuite"), only);
+    } finally {
+      await second.close().catch(() => {});
+    }
+  }
+
   if ( !only || only.includes("playerSuite") ) {
     await gm.inWorld("harness.mjs", "preparePlayer");
     for ( const player of PLAYERS ) {
